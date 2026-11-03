@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercise 1 - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="navtop"><a href="index.html">&larr; Menu</a><a href="ex2.html">Exercise 2 &rarr;</a></div>
+  <h1>Exercise 1 &ndash; Welford&rsquo;s recurrence formulas</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Derive the recurrences for the sum of squares and the variance, following the same approach as Knuth&rsquo;s recurrence for the mean, and implement them in about three lines.</p>
+  <nav class="toc"><a href="#d1">1 Mean</a><a href="#d2">2 Sum of squares</a><a href="#d3">3 Variance</a><a href="#code">4 Code</a><a href="#demo">5 Live demo</a><a href="#stab">6 Stability</a></nav>
+  <a class="dl" href="welford-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="d1">
+  <h2><span class="num">1</span><span>Knuth&rsquo;s recurrence for the mean</span></h2>
+  <p>Given the observations x<sub>1</sub>, x<sub>2</sub>, &hellip; arriving one at a time, let</p>
+  <div class="deriv"><span class="eq">M<sub>k</sub> = (1/k) &sum;<sub>i=1..k</sub> x<sub>i</sub> &nbsp;&nbsp;(mean of the first k values),&nbsp;&nbsp; SS<sub>k</sub> = &sum;<sub>i=1..k</sub> (x<sub>i</sub> &minus; M<sub>k</sub>)&sup2; &nbsp;&nbsp;(sum of squares),&nbsp;&nbsp; M<sub>0</sub> = SS<sub>0</sub> = 0.</span></div>
+  <p><b>Idea.</b> Express the quantity at step k through the quantity at step k&minus;1 and the new value x<sub>k</sub>, so that the old data never have to be read again.</p>
+  <div class="deriv">
+    <span class="eq">k M<sub>k</sub> = &sum;<sub>i=1..k</sub> x<sub>i</sub> = &sum;<sub>i=1..k&minus;1</sub> x<sub>i</sub> + x<sub>k</sub> = (k&minus;1) M<sub>k&minus;1</sub> + x<sub>k</sub></span>
+    <span class="why">split off the last term, and recognise (k&minus;1) M<sub>k&minus;1</sub> as the previous sum</span>
+    <span class="eq">M<sub>k</sub> = [(k&minus;1) M<sub>k&minus;1</sub> + x<sub>k</sub>] / k = M<sub>k&minus;1</sub> &minus; M<sub>k&minus;1</sub>/k + x<sub>k</sub>/k</span>
+    <span class="why">divide by k and write (k&minus;1)/k = 1 &minus; 1/k</span>
+  </div>
+  <div class="result"><span class="eq">M<sub>k</sub> = M<sub>k&minus;1</sub> + (x<sub>k</sub> &minus; M<sub>k&minus;1</sub>) / k</span>
+  <span class="sub">The new mean is the old mean corrected by a fraction 1/k of the difference &delta;<sub>k</sub> = x<sub>k</sub> &minus; M<sub>k&minus;1</sub>.</span></div>
+  <p>Two relations that follow immediately and are used below, with &delta;<sub>k</sub> = x<sub>k</sub> &minus; M<sub>k&minus;1</sub>:</p>
+  <div class="deriv"><span class="eq">M<sub>k</sub> &minus; M<sub>k&minus;1</sub> = &delta;<sub>k</sub>/k</span><span class="eq">x<sub>k</sub> &minus; M<sub>k</sub> = &delta;<sub>k</sub> &minus; &delta;<sub>k</sub>/k = &delta;<sub>k</sub> (k&minus;1)/k</span></div>
+</section>
+
+<section class="card" id="d2">
+  <h2><span class="num">2</span><span>Welford&rsquo;s recurrence for the sum of squares</span></h2>
+  <p>The same approach: write SS<sub>k</sub> in terms of SS<sub>k&minus;1</sub>. The difficulty is that every term (x<sub>i</sub> &minus; M<sub>k</sub>) now contains the <i>new</i> mean M<sub>k</sub>, while SS<sub>k&minus;1</sub> uses the old one. The trick is to rewrite M<sub>k</sub> = M<sub>k&minus;1</sub> + &delta;<sub>k</sub>/k.</p>
+  <div class="deriv">
+    <span class="eq">SS<sub>k</sub> = &sum;<sub>i=1..k&minus;1</sub> (x<sub>i</sub> &minus; M<sub>k</sub>)&sup2; + (x<sub>k</sub> &minus; M<sub>k</sub>)&sup2;</span>
+    <span class="why">step 1: separate the new observation from the previous ones</span>
+    <span class="eq">&sum;<sub>i&lt;k</sub> (x<sub>i</sub> &minus; M<sub>k</sub>)&sup2; = &sum;<sub>i&lt;k</sub> [(x<sub>i</sub> &minus; M<sub>k&minus;1</sub>) &minus; &delta;<sub>k</sub>/k]&sup2;</span>
+    <span class="why">step 2: M<sub>k</sub> = M<sub>k&minus;1</sub> + &delta;<sub>k</sub>/k</span>
+    <span class="eq">= &sum;<sub>i&lt;k</sub> (x<sub>i</sub> &minus; M<sub>k&minus;1</sub>)&sup2; &minus; 2(&delta;<sub>k</sub>/k) &sum;<sub>i&lt;k</sub> (x<sub>i</sub> &minus; M<sub>k&minus;1</sub>) + (k&minus;1) &delta;<sub>k</sub>&sup2;/k&sup2;</span>
+    <span class="why">step 3: expand the square; the factor &delta;<sub>k</sub>/k does not depend on i</span>
+    <span class="eq">= SS<sub>k&minus;1</sub> &minus; 0 + (k&minus;1) &delta;<sub>k</sub>&sup2;/k&sup2;</span>
+    <span class="why">step 4: deviations from the mean add up to zero, &sum;<sub>i&lt;k</sub> (x<sub>i</sub> &minus; M<sub>k&minus;1</sub>) = 0</span>
+    <span class="eq">(x<sub>k</sub> &minus; M<sub>k</sub>)&sup2; = &delta;<sub>k</sub>&sup2; (k&minus;1)&sup2;/k&sup2;</span>
+    <span class="why">step 5: last term, using x<sub>k</sub> &minus; M<sub>k</sub> = &delta;<sub>k</sub>(k&minus;1)/k from Section 1</span>
+    <span class="eq">SS<sub>k</sub> = SS<sub>k&minus;1</sub> + (k&minus;1) &delta;<sub>k</sub>&sup2;/k&sup2; + (k&minus;1)&sup2; &delta;<sub>k</sub>&sup2;/k&sup2; = SS<sub>k&minus;1</sub> + (k&minus;1) &delta;<sub>k</sub>&sup2; [1 + (k&minus;1)]/k&sup2;</span>
+    <span class="why">step 6: add the two contributions and factor (k&minus;1) &delta;<sub>k</sub>&sup2;/k&sup2;</span>
+  </div>
+  <div class="result"><span class="eq">SS<sub>k</sub> = SS<sub>k&minus;1</sub> + (k&minus;1)/k &middot; &delta;<sub>k</sub>&sup2; = SS<sub>k&minus;1</sub> + (x<sub>k</sub> &minus; M<sub>k&minus;1</sub>)(x<sub>k</sub> &minus; M<sub>k</sub>)</span>
+  <span class="sub">The last form comes from &delta;<sub>k</sub>&sup2;(k&minus;1)/k = &delta;<sub>k</sub> &middot; (x<sub>k</sub> &minus; M<sub>k</sub>). It is the one used in the code: the product of the deviation from the <i>old</i> mean and the deviation from the <i>new</i> mean. Since (k&minus;1)/k &gt; 0, the increment is never negative, so SS<sub>k</sub> can only grow.</span></div>
+  <p><b>Independent check</b> with the computational identity SS<sub>k</sub> = &sum;x<sub>i</sub>&sup2; &minus; k M<sub>k</sub>&sup2;. Writing M = M<sub>k&minus;1</sub>, x<sub>k</sub> = M + &delta;, M<sub>k</sub> = M + &delta;/k:</p>
+  <div class="deriv"><span class="eq">SS<sub>k</sub> &minus; SS<sub>k&minus;1</sub> = x<sub>k</sub>&sup2; &minus; k M<sub>k</sub>&sup2; + (k&minus;1) M<sub>k&minus;1</sub>&sup2; = (M+&delta;)&sup2; &minus; k (M+&delta;/k)&sup2; + (k&minus;1) M&sup2;</span>
+  <span class="eq">= M&sup2; + 2M&delta; + &delta;&sup2; &minus; kM&sup2; &minus; 2M&delta; &minus; &delta;&sup2;/k + (k&minus;1) M&sup2; = &delta;&sup2; (1 &minus; 1/k) = (k&minus;1) &delta;&sup2;/k &nbsp;&#10003;</span></div>
+</section>
+
+<section class="card" id="d3">
+  <h2><span class="num">3</span><span>Recurrences for the variance</span></h2>
+  <p>The sample variance (unbiased, Bessel&rsquo;s correction) and the population (maximum-likelihood) variance of the first k values are s<sub>k</sub>&sup2; = SS<sub>k</sub>/(k&minus;1) for k &ge; 2 and v<sub>k</sub> = SS<sub>k</sub>/k. Substituting SS<sub>k&minus;1</sub> = (k&minus;2) s<sub>k&minus;1</sub>&sup2; and SS<sub>k&minus;1</sub> = (k&minus;1) v<sub>k&minus;1</sub> in the result of Section 2:</p>
+  <div class="deriv">
+    <span class="eq">(k&minus;1) s<sub>k</sub>&sup2; = (k&minus;2) s<sub>k&minus;1</sub>&sup2; + (k&minus;1) &delta;<sub>k</sub>&sup2;/k</span>
+    <span class="why">SS<sub>k</sub> = SS<sub>k&minus;1</sub> + (k&minus;1) &delta;<sub>k</sub>&sup2;/k, with SS<sub>k</sub> = (k&minus;1) s<sub>k</sub>&sup2; and SS<sub>k&minus;1</sub> = (k&minus;2) s<sub>k&minus;1</sub>&sup2;</span>
+    <span class="eq">k v<sub>k</sub> = (k&minus;1) v<sub>k&minus;1</sub> + (k&minus;1) &delta;<sub>k</sub>&sup2;/k</span>
+    <span class="why">same, with SS<sub>k</sub> = k v<sub>k</sub> and SS<sub>k&minus;1</sub> = (k&minus;1) v<sub>k&minus;1</sub></span>
+  </div>
+  <div class="result">
+    <span class="eq">s<sub>k</sub>&sup2; = [(k&minus;2)/(k&minus;1)] s<sub>k&minus;1</sub>&sup2; + &delta;<sub>k</sub>&sup2;/k &nbsp;&nbsp;(k &ge; 2, sample variance)</span>
+    <span class="eq">v<sub>k</sub> = [(k&minus;1)/k] v<sub>k&minus;1</sub> + (k&minus;1) &delta;<sub>k</sub>&sup2;/k&sup2; &nbsp;&nbsp;(population variance)</span>
+    <span class="sub">In practice it is simpler and numerically safer to update SS<sub>k</sub> and divide at the end: s<sub>k</sub>&sup2; = SS<sub>k</sub>/(k&minus;1).</span>
+  </div>
+</section>
+
+<section class="card" id="code">
+  <h2><span class="num">4</span><span>The code</span></h2>
+  <p>The whole recurrence is the three lines inside the loop (the first one only stores the difference from the old mean, used twice). Nothing else is stored: the memory is three numbers whatever the length of the stream.</p>
+  <h3>Python</h3>
+  <pre class="code" id="pyCode"><button class="copy ghost" onclick="copyCode('pyCode', this)">Copy</button><span class="cm"># k = number of values seen, mean = M_k, ss = SS_k</span>
+k = mean = ss = 0
+for x in data:
+    k += 1
+<span class="hl">    d = x - mean            <span class="cm"># difference from the OLD mean</span></span>
+<span class="hl">    mean += d / k           <span class="cm"># Knuth:   M_k  = M_{k-1} + (x_k - M_{k-1}) / k</span></span>
+<span class="hl">    ss += d * (x - mean)    <span class="cm"># Welford: SS_k = SS_{k-1} + (x_k - M_{k-1}) (x_k - M_k)</span></span>
+variance = ss / (k - 1)     <span class="cm"># sample variance (k >= 2); use ss / k for the population variance</span></pre>
+  <h3>JavaScript</h3>
+  <pre class="code" id="jsCode"><button class="copy ghost" onclick="copyCode('jsCode', this)">Copy</button>let k = 0, mean = 0, ss = 0;
+for (const x of data) {
+  k++;
+<span class="hl">  const d = x - mean;       <span class="cm">// difference from the OLD mean</span></span>
+<span class="hl">  mean += d / k;            <span class="cm">// Knuth</span></span>
+<span class="hl">  ss += d * (x - mean);     <span class="cm">// Welford</span></span>
+}
+const variance = ss / (k - 1);</pre>
+  <p class="note">Complete runnable versions are in <code>welford.py</code> (with a self-test) and in <code>js/welford.js</code>, where the same three lines are used by the live demo below and by Exercise 2. Why the product uses <i>both</i> means: with the old mean twice, or the new mean twice, the result would be wrong; the product (x<sub>k</sub> &minus; M<sub>k&minus;1</sub>)(x<sub>k</sub> &minus; M<sub>k</sub>) equals (k&minus;1)/k &middot; &delta;<sub>k</sub>&sup2; exactly.</p>
+</section>
+
+<section class="card" id="demo">
+  <h2><span class="num">5</span><span>Live demo</span></h2>
+  <p>Type or paste your own numbers (separated by commas, spaces or new lines); the table shows the state of the recurrence after each value.</p>
+  <label for="dataIn">Data</label>
+  <textarea id="dataIn" class="short" oninput="runDemo()">2, 4, 4, 4, 5, 5, 7, 9</textarea>
+  <div class="tblwrap"><table class="res" id="traceTab"></table></div>
+  <div class="tblwrap"><table class="res" id="cmpTab"></table></div>
+  <p class="note">The columns M<sub>k</sub> and SS<sub>k</sub> are the running values; s<sub>k</sub>&sup2; is the sample variance of the first k values. The last row of the comparison checks Welford against the classical two-pass computation (first the mean, then the squared deviations from it).</p>
+</section>
+
+<section class="card" id="stab">
+  <h2><span class="num">6</span><span>Numerical stability</span></h2>
+  <p>The formula many people learn, s&sup2; = (&sum;x&sup2; &minus; (&sum;x)&sup2;/n)/(n&minus;1), subtracts two huge, almost equal numbers when the mean is large compared with the spread, and in double precision loses all its digits (&ldquo;catastrophic cancellation&rdquo;). Welford only adds small corrections to the running values. Here the values below are shifted by a constant c; the variance does not change when a constant is added, so the exact answer is known.</p>
+  <div class="cols3b">
+    <div><label for="stabIn">Values</label><input type="text" id="stabIn" value="4, 7, 13, 16" oninput="runStab()"></div>
+    <div><label for="offIn">Offset c added to every value</label><select id="offIn" onchange="runStab()"><option value="0">0</option><option value="1000">10^3</option><option value="1000000">10^6</option><option value="1000000000" selected>10^9</option><option value="1000000000000">10^12</option><option value="100000000000000">10^14</option></select></div>
+  </div>
+  <div class="tblwrap"><table class="res" id="stabTab"></table></div>
+  <p class="note">The exact variance is computed on the unshifted values. For c = 10<sup>9</sup> the naive formula is already wrong in the first significant digit (and can even give a negative variance), while Welford and the two-pass method stay exact; for c = 10<sup>14</sup> the shifted values are so large that their own representation limits every method.</p>
+</section>
+</div>
+<script src="js/welford.js"></script>
+<script src="js/ex1.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="welford-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("welford-site.zip was not found next to the pages. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>

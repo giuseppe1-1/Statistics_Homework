@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercise 2 - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="navtop"><a href="index.html">&larr; Menu</a><a href="ex1.html">&larr; Exercise 1</a></div>
+  <h1>Exercise 2 &ndash; Sampling mean and variance</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Each penetration attempt gets a score between 0 and 10 from a fixed distribution with mean &mu; and variance &sigma;&sup2;. Each of m hackers attacks n systems; Welford&rsquo;s recurrences give the hacker&rsquo;s sample mean and variance, and the m results are averaged and compared with &mu; and &sigma;&sup2;.</p>
+  <nav class="toc"><a href="#setup">1 Setup</a><a href="#welf">2 Welford in action</a><a href="#avg">3 Averages vs &mu;, &sigma;&sup2;</a><a href="#dist">4 Distributions</a><a href="#var">5 Variability vs n</a><a href="#concl">6 Conclusions</a></nav>
+  <a class="dl" href="welford-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="setup">
+  <h2><span class="num">1</span><span>Model and parameters</span></h2>
+  <p>The score of one attempt is a random variable X in [0, 10] with a fixed distribution (chosen below). Hacker j attacks n systems and produces the trajectory x<sub>1</sub>, &hellip;, x<sub>n</sub>; Welford&rsquo;s recurrences (Exercise 1) give its sample mean x&#772;<sub>j</sub> and sample variance s<sub>j</sub>&sup2; = SS/(n&minus;1) in one pass. Trajectories are nested: the values for n = 10 are those of the first 10 attempts of the same hacker&rsquo;s longer run.</p>
+  <div class="params">
+    <div><label for="dist">Score distribution</label><select id="dist" onchange="distChanged()"><option value="binomial" selected>Binomial(10, q)</option><option value="uniform">Uniform on {0, …, 10}</option><option value="beta">10 · Beta(2, 5), continuous</option><option value="custom">Custom (11 weights)</option></select></div>
+    <div id="qBox"><label for="q">q (Binomial)</label><input type="number" id="q" value="0.3" min="0.01" max="0.99" step="0.01" onchange="distChanged()"></div>
+    <div class="wide hidden" id="wBox"><label for="w">Weights for scores 0 … 10 (any positive numbers)</label><input type="text" id="w" value="1, 2, 3, 5, 8, 10, 8, 5, 3, 2, 1" onchange="distChanged()"></div>
+    <div><label for="m">m (hackers)</label><input type="number" id="m" value="3000" min="50" max="50000" step="50"></div>
+    <div class="wide"><label for="ns">n values to compare (≥ 2, comma separated)</label><input type="text" id="ns" value="2, 5, 10, 20, 50, 100, 500, 1000"></div>
+    <div><label for="seed">Random seed</label><input type="number" id="seed" value="2327983"></div>
+  </div>
+  <button id="run" onclick="run()">Run simulation</button>
+  <div class="prog"><div id="bar"></div></div>
+  <div class="box" id="distInfo"></div>
+  <div class="figs2"><figure><svg id="svgDist" viewBox="0 0 520 280"></svg><figcaption>The score distribution; dashed line = &mu;.</figcaption></figure><div id="runInfo" class="box" style="margin-top:0"></div></div>
+</section>
+
+<section class="card" id="welf">
+  <h2><span class="num">2</span><span>Welford in action: a few hackers</span></h2>
+  <p>Running sample mean and running sample variance of the first six hackers as the number of attempts k grows. The mean settles on &mu; and the variance on &sigma;&sup2; (dashed), and the spread between hackers shrinks. The shaded guide for the mean is &mu; &plusmn; 2&sigma;/&radic;k.</p>
+  <div class="figs2"><figure><svg id="svgPM"></svg></figure><figure><svg id="svgPS"></svg></figure></div>
+</section>
+
+<section class="card" id="avg">
+  <h2><span class="num">3</span><span>Average of the sampling means and variances vs &mu; and &sigma;&sup2;</span></h2>
+  <p>For every n, the table averages the m sample means and the m sample variances (computed with Welford) and compares them with the theoretical values. The &plusmn; is the standard error of the average (sd across hackers / &radic;m), and &ldquo;z&rdquo; is the difference in standard errors: values within about &plusmn;2 are compatible with equality. The last columns show what happens if the sum of squares is divided by n instead of n&minus;1.</p>
+  <div class="tblwrap"><table class="res" id="avgTab"></table></div>
+  <div class="figs2"><figure><svg id="svgAvgM"></svg></figure><figure><svg id="svgAvgV"></svg></figure></div>
+  <div class="findings" id="finds"></div>
+</section>
+
+<section class="card" id="dist">
+  <h2><span class="num">4</span><span>Distribution of the sampling mean and variance across hackers</span></h2>
+  <div class="row"><div><label for="nsel">Show n =</label><select id="nsel" onchange="drawHists()"></select></div></div>
+  <div class="figs2"><figure><svg id="svgHM"></svg><figcaption>Sample means of the m hackers; red curve = N(&mu;, &sigma;&sup2;/n) (CLT); dashed = &mu;.</figcaption></figure><figure><svg id="svgHV"></svg><figcaption>Sample variances s&sup2; of the m hackers; dashed = &sigma;&sup2;.</figcaption></figure></div>
+</section>
+
+<section class="card" id="var">
+  <h2><span class="num">5</span><span>Variability as n increases</span></h2>
+  <p>Standard deviation, across the m hackers, of the sample means and of the sample variances, compared with the theory: sd(x&#772;) = &sigma;/&radic;n and sd(s&sup2;) = &radic;[(&mu;<sub>4</sub> &minus; (n&minus;3)/(n&minus;1) &sigma;<sup>4</sup>)/n], where &mu;<sub>4</sub> is the fourth central moment of the scores.</p>
+  <div class="figs2"><figure><svg id="svgVarM"></svg></figure><figure><svg id="svgVarV"></svg></figure></div>
+  <div class="tblwrap"><table class="res" id="varTab"></table></div>
+</section>
+
+<section class="card" id="concl">
+  <h2><span class="num">6</span><span>Conclusions</span></h2>
+  <div id="conclText"></div>
+</section>
+</div>
+<script src="js/welford.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/ex2.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="welford-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("welford-site.zip was not found next to the pages. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>
