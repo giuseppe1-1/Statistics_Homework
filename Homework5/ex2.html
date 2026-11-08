@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercise 2 - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="navtop"><a href="index.html">&larr; Menu</a><a href="ex1.html">&larr; Exercise 1</a></div>
+  <h1>Exercise 2 &ndash; Numerical computation of the normal CDF</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Why &Phi;(x) has no elementary formula (Liouville), how the error function represents it exactly, and seven ways of computing it numerically &ndash; trapezoids, Simpson, series, a continued fraction, an erf approximation and an efficient hybrid &ndash; compared with an 80-digit reference and with published tables.</p>
+  <nav class="toc"><a href="#prob">1 The problem</a><a href="#liou">2 Liouville</a><a href="#erf">3 erf</a><a href="#meth">4 Methods</a><a href="#acc">5 Accuracy</a><a href="#conv">6 Quadrature convergence</a><a href="#eff">7 Efficiency</a><a href="#concl">8 Conclusions</a></nav>
+  <a class="dl" href="integration-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="prob">
+  <h2><span class="num">1</span><span>The problem</span></h2>
+  <p>The standard normal density is &phi;(t) = e<sup>&minus;t&sup2;/2</sup>/&radic;(2&pi;) and its cumulative distribution function is</p>
+  <div class="result"><span class="eq">&Phi;(x) = P(Z &le; x) = &int;<sub>&minus;&infin;</sub><sup>x</sup> &phi;(t) dt</span></div>
+  <p>Following Hogg&ndash;McKean&ndash;Craig (<a href="https://faculty.etsu.edu/gardnerr/4047/notes-Hogg-McKean-Craig/Hogg-McKean-Craig-3-4.pdf" target="_blank" rel="noopener">section 3.4</a>), &phi; is a legitimate density because I = &int;<sub>0</sub><sup>&infin;</sup> (2/&radic;&pi;) e<sup>&minus;x&sup2;</sup> dx satisfies I&sup2; = 1: writing I&sup2; as a double integral and passing to polar coordinates gives 1, and the substitution z = &radic;2 x turns it into &int;<sub>&minus;&infin;</sub><sup>&infin;</sup> &phi; = 1. The same notes observe that the integrand has no elementary antiderivative, so probabilities are read from a table or computed with a power series, as we do here. Two properties are used everywhere below:</p>
+  <div class="deriv"><span class="eq">&Phi;(&minus;x) = 1 &minus; &Phi;(x) &nbsp;(symmetry of &phi;) &nbsp;&nbsp;&nbsp; &Phi;(x) = 1/2 + &int;<sub>0</sub><sup>x</sup> &phi;(t) dt &nbsp;(for any real x)</span></div>
+</section>
+
+<section class="card" id="liou">
+  <h2><span class="num">2</span><span>Why &Phi; is not an elementary function: Liouville&rsquo;s theorem</span></h2>
+  <p><i>Elementary</i> functions are those built from constants and x with finitely many sums, products, quotients, compositions, roots, exponentials and logarithms. Differentiating an elementary function always gives an elementary function, but integrating does not: the question is which integrals stay elementary. Liouville (1830s) answered it for exponentials:</p>
+  <div class="callout"><b>Theorem (Liouville; Ostrowski, Rosenlicht).</b> Let f and g be rational functions, g non-constant. Then &int; f(x) e<sup>g(x)</sup> dx is an elementary function <b>if and only if</b> there is a <i>rational</i> function h such that f = h&prime; + g&prime; h. In that case the antiderivative is h(x) e<sup>g(x)</sup>.</div>
+  <p><b>Application.</b> &int; e<sup>&minus;t&sup2;/2</sup> dt has f = 1, g = &minus;t&sup2;/2, g&prime; = &minus;t. We would need a rational h with</p>
+  <div class="deriv"><span class="eq">h&prime;(t) &minus; t&middot;h(t) = 1.</span>
+    <span class="why">Write h = P/Q in lowest terms and show that no such h exists:</span>
+    <span class="eq">(a) If Q is not constant, let c be a root of Q of multiplicity m &ge; 1. Then h&prime; has a pole of order m+1 at c, while t&middot;h has a pole of order at most m. So h&prime; &minus; t h has a pole at c and cannot equal 1.</span>
+    <span class="eq">(b) So h is a polynomial of degree d &ge; 0 (h = 0 gives 0 &ne; 1). Then t&middot;h has degree d+1 with leading coefficient lc(h), and h&prime; has degree d&minus;1: h&prime; &minus; t h has degree d+1 &ge; 1, so it is not the constant 1.</span>
+    <span class="eq">Contradiction: no rational h exists &rArr; &int; e<sup>&minus;t&sup2;/2</sup> dt, and hence &Phi;, is not elementary.</span></div>
+  <p class="note">There is no contradiction with the elementary value &int;<sub>&minus;&infin;</sub><sup>&infin;</sup> &phi; = 1: a <i>definite</i> integral between special limits may be elementary (polar-coordinates trick) even if the antiderivative is not. What fails is a closed formula for &Phi;(x) at general x.</p>
+</section>
+
+<section class="card" id="erf">
+  <h2><span class="num">3</span><span>The error function: an exact representation that still needs numerics</span></h2>
+  <p>Since no elementary function does the job, one <i>defines</i> a new &ldquo;special&rdquo; function by the integral itself:</p>
+  <div class="result"><span class="eq">erf(z) = (2/&radic;&pi;) &int;<sub>0</sub><sup>z</sup> e<sup>&minus;s&sup2;</sup> ds, &nbsp; erfc(z) = 1 &minus; erf(z)</span>
+    <span class="eq">&Phi;(x) = &frac12; [ 1 + erf(x/&radic;2) ] = &frac12; erfc(&minus;x/&radic;2)</span>
+    <span class="sub">Proof: in &int;<sub>0</sub><sup>x</sup> &phi;(t) dt put t = &radic;2 s; then &int;<sub>0</sub><sup>x/&radic;2</sup> e<sup>&minus;s&sup2;</sup> ds/&radic;&pi; = erf(x/&radic;2)/2.</span></div>
+  <p>This is an <b>exact analytic representation</b>: &Phi; is expressed without approximation through erf, which has an everywhere-convergent Maclaurin series, erf(z) = (2/&radic;&pi;) &sum;<sub>k&ge;0</sub> (&minus;1)<sup>k</sup> z<sup>2k+1</sup> / (k!(2k+1)), and well-known properties (odd, erf(&infin;) = 1, erf&prime; = 2e<sup>&minus;z&sup2;</sup>/&radic;&pi;).</p>
+  <p>But <b>numerical methods are still needed</b>, because naming a function is not computing it: the value erf(z) at a general z is a transcendental number which can only be reached through an infinite sum, an infinite fraction or an integral, and a computer has to stop after finitely many operations in finite-precision arithmetic. Every practical implementation (the C library, R, NumPy/SciPy, &hellip;) therefore uses a truncated series, a continued fraction or minimax rational approximations on several intervals. The choice matters for <i>accuracy</i> (cancellation in alternating series, relative accuracy in the tails where &Phi; &asymp; 10<sup>&minus;16</sup>) and for <i>speed</i>: this is what the rest of the page measures.</p>
+</section>
+
+<section class="card" id="meth">
+  <h2><span class="num">4</span><span>The methods implemented</span></h2>
+  <div class="tblwrap"><table class="res">
+    <tr><th>Method</th><th>Formula</th><th>Properties</th></tr>
+    <tr><td>Trapezoidal rule</td><td>&Phi;(x) = &frac12; &plusmn; h[&phi;(0)/2 + &sum;<sub>i=1..n&minus;1</sub> &phi;(ih) + &phi;(|x|)/2], h = |x|/n</td><td>Error O(h&sup2;). Simple, converges slowly: needs n ~ 10<sup>4</sup> for 8 digits.</td></tr>
+    <tr><td>Simpson&rsquo;s rule</td><td>h/3 [&phi;(0) + 4&phi;(h) + 2&phi;(2h) + &hellip; + &phi;(|x|)], n even</td><td>Error O(h&sup4;): far fewer points for the same accuracy.</td></tr>
+    <tr><td>erf Maclaurin series</td><td>&frac12;[1 + (2/&radic;&pi;) &sum; (&minus;1)<sup>k</sup> z<sup>2k+1</sup>/(k!(2k+1))], z = x/&radic;2</td><td>Exact in the limit, but alternating: for |x| &gt; 3 the terms grow to e<sup>z&sup2;</sup> before decaying, and rounding errors destroy the result (cancellation).</td></tr>
+    <tr><td>Series with positive terms</td><td>&Phi;(x) = &frac12; + &phi;(x) &sum;<sub>k&ge;0</sub> x<sup>2k+1</sup>/(1&middot;3&middot;5&middot;&hellip;&middot;(2k+1))</td><td>Obtained from &Phi;&prime; = &phi; and &phi;&prime; = &minus;t&phi;. All terms have the same sign: stable. Needs ~x&sup2;/2 + 20 terms. Loses relative accuracy for large negative x (1/2 &minus; 1/2).</td></tr>
+    <tr><td>Continued fraction</td><td>Q(x) = 1 &minus; &Phi;(x) = &phi;(x) / (x + 1/(x + 2/(x + 3/(x + &hellip;)))) , x &gt; 0</td><td>Converges fast in the tails (15 iterations at x = 8), slowly near 0 (hundreds at x = 1). Computed with Lentz&rsquo;s algorithm; keeps full <i>relative</i> accuracy in the lower tail.</td></tr>
+    <tr><td>erf approximation (A&amp;S 7.1.26)</td><td>erfc(z) &asymp; (a<sub>1</sub>t + &hellip; + a<sub>5</sub>t<sup>5</sup>) e<sup>&minus;z&sup2;</sup>, t = 1/(1 + 0.3275911 z)</td><td>Six operations and one exp, absolute error 1.5&middot;10<sup>&minus;7</sup>: fine for a table, not for double precision.</td></tr>
+    <tr><td><b>Hybrid</b> (our efficient method)</td><td>positive series for &minus;1.5 &lt; x &lt; 3; continued fraction otherwise (Q(x) directly for x &le; &minus;1.5, 1 &minus; Q(x) for x &ge; 3)</td><td>Each method is used where it is stable and fast. Typically 20&ndash;40 terms or iterations (at most about 180, at the switch point x = &minus;1.5), full double precision.</td></tr>
+  </table></div>
+  <h3>The recommended code</h3>
+  <pre class="code" id="jsCode"><button class="copy ghost" onclick="copyCode('jsCode', this)">Copy</button>const phi = x =&gt; Math.exp(-0.5 * x * x) / Math.sqrt(2 * Math.PI);
+
+function posSeries(x) {                 // Phi(x) = 1/2 + phi(x) * sum x^(2k+1) / (2k+1)!!
+  let term = x, sum = x;
+  for (let k = 1; k &lt; 5000; k++) {
+    term *= x * x / (2 * k + 1); sum += term;
+    if (k &gt; x * x / 2 &amp;&amp; Math.abs(term) &lt; 1e-17 * Math.abs(sum)) break;
+  }
+  return 0.5 + phi(x) * sum;
+}
+function upperTail(x) {                 // Q(x) = P(Z &gt; x), x &gt; 0, Lentz's continued fraction
+  let f = x, C = x, D = 0;
+  for (let k = 1; k &lt; 3000; k++) {
+    D = 1 / (x + k * D); C = x + k / C; const d = C * D; f *= d;
+    if (Math.abs(d - 1) &lt; 1e-16) break;
+  }
+  return phi(x) / f;
+}
+function normalCdf(x) {
+  if (x &gt;= 0) return x &lt; 3 ? posSeries(x) : 1 - upperTail(x);
+  return x &gt; -1.5 ? posSeries(x) : upperTail(-x);
+}</pre>
+  <p class="note">The same methods are in <code>js/ncdf.js</code> (browser) and <code>normal_cdf.py</code> (Python, compared with <code>math.erfc</code>).</p>
+</section>
+
+<section class="card" id="acc">
+  <h2><span class="num">5</span><span>Accuracy against a trusted reference</span></h2>
+  <p><b>References.</b> (1) An <b>80-digit reference</b> computed in your browser by the Maclaurin series in exact integer (BigInt) arithmetic; it was checked against <code>mpmath</code> (Python arbitrary-precision library) at several points and agrees to all printed digits. (2) <b>Published tables</b> found on the web: the NIST/SEMATECH e-Handbook of Statistical Methods, &sect;1.3.6.7.1 (areas from 0 to z, 5 decimals) and the Wikipedia &ldquo;Standard normal table&rdquo; (&Phi;(z), 5 decimals), compared with our hybrid method at the end of this section.</p>
+  <div class="params">
+    <div><label for="nQ">n for the trapezoid / Simpson rules</label><input type="number" id="nQ" value="1000" min="2" max="200000" onchange="renderAcc()"></div>
+    <div><label for="xc">Extra point x</label><input type="number" id="xc" value="1.2345" step="any" min="-12" max="12" onchange="renderAcc()"></div>
+  </div>
+  <p>Relative error |&Phi;<sub>method</sub> &minus; &Phi;<sub>ref</sub>| / &Phi;<sub>ref</sub> at several points (green &lt; 10<sup>&minus;12</sup>, yellow &lt; 10<sup>&minus;6</sup>, red otherwise):</p>
+  <div class="tblwrap"><table class="res" id="ptTab"></table></div>
+  <h3>Relative error along the real line</h3>
+  <div class="figs"><figure><svg id="svgAcc"></svg><figcaption>Relative error of each method for x from &minus;8 to 8 (values below 10<sup>&minus;17</sup> are drawn at 10<sup>&minus;17</sup>; the plot is clipped at 100).</figcaption></figure></div>
+  <div class="findings" id="accFinds"></div>
+  <h3>Check against the published tables</h3>
+  <div class="tblwrap"><table class="res" id="nistTab"></table></div>
+</section>
+
+<section class="card" id="conv">
+  <h2><span class="num">6</span><span>Convergence of the quadrature rules</span></h2>
+  <div class="params"><div><label for="xq">Point x</label><input type="number" id="xq" value="2" step="any" min="-12" max="12" onchange="renderConv()"></div></div>
+  <div class="figs2"><figure><svg id="svgConv"></svg></figure><div><div class="tblwrap"><table class="res" id="ordTab"></table></div><p class="note">Absolute error against the 80-digit reference. Errors reach the double-precision floor (~10<sup>&minus;16</sup>) and stop improving.</p></div></div>
+</section>
+
+<section class="card" id="eff">
+  <h2><span class="num">7</span><span>Numerical efficiency</span></h2>
+  <p>Timing on 20,000 evaluation points uniform in [&minus;6, 6] (best of 3 runs), with the maximum relative error on that interval from the data of Section 5. The trapezoid and Simpson rules use the n given above.</p>
+  <button onclick="renderEff()">Measure again</button>
+  <div class="tblwrap"><table class="res" id="effTab"></table></div>
+  <h3>Work per evaluation as x grows</h3>
+  <div class="tblwrap"><table class="res" id="itTab"></table></div>
+  <p class="note">The positive series needs more terms as x grows (about x&sup2;/2 + 20) while the continued fraction needs fewer: this is why the hybrid switches from one to the other. Times vary from run to run and between browsers.</p>
+</section>
+
+<section class="card" id="concl">
+  <h2><span class="num">8</span><span>Conclusions</span></h2>
+  <div id="conclText"></div>
+</section>
+</div>
+<script src="js/charts.js"></script>
+<script src="js/ncdf.js"></script>
+<script src="js/ex2.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="integration-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("integration-site.zip was not found next to the pages. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>

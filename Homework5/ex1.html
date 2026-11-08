@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exercise 1 - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="navtop"><a href="index.html">&larr; Menu</a><a href="ex2.html">Exercise 2 &rarr;</a></div>
+  <h1>Exercise 1 &ndash; Riemann and Lebesgue integration</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Nine functions (smooth, with jumps, unbounded, and the Dirichlet and Thomae functions) integrated numerically by slicing the <b>domain</b> (Riemann) and by slicing the <b>range</b> (Lebesgue). Accuracy, convergence and cost are compared, and the cases where the two approaches disagree are shown. Everything is computed in your browser.</p>
+  <nav class="toc"><a href="#idea">1 Two ways of slicing</a><a href="#see">2 See it</a><a href="#all">3 All functions</a><a href="#conv">4 Convergence</a><a href="#eff">5 Efficiency</a><a href="#patho">6 Pathological cases</a><a href="#concl">7 Conclusions</a></nav>
+  <a class="dl" href="integration-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="idea">
+  <h2><span class="num">1</span><span>Two ways of slicing</span></h2>
+  <p>Both definitions approximate &int;<sub>a</sub><sup>b</sup> f as a sum of &ldquo;height &times; width&rdquo; terms. They differ in <i>which axis is cut</i>. A classical image: to count a pile of coins, Riemann takes them in the order in which they lie on the table and adds their values one by one; Lebesgue first sorts them by value and then adds (value) &times; (how many coins have that value).</p>
+  <div class="figs2">
+    <div class="box"><b>Riemann (domain partition).</b> Cut [a, b] into n cells of width h = (b&minus;a)/n and pick a tag t<sub>i</sub> in each cell:
+      <div class="deriv"><span class="eq">R<sub>n</sub> = &sum;<sub>i</sub> f(t<sub>i</sub>) h</span></div>
+      Tags used here: left end, midpoint. Darboux sums use the exact infimum / supremum on every cell: <span class="mono">L<sub>n</sub> = &sum; inf f &middot; h &le; &int; f &le; U<sub>n</sub> = &sum; sup f &middot; h</span>. f is Riemann integrable when L<sub>n</sub> and U<sub>n</sub> have the same limit.</div>
+    <div class="box"><b>Lebesgue (range partition).</b> Cut the range [m, M] into N bands y<sub>k</sub> = m + k&middot;&delta; and look at the preimages E<sub>k</sub> = f<sup>&minus;1</sup>([y<sub>k</sub>, y<sub>k+1</sub>)):
+      <div class="deriv"><span class="eq">S<sub>N</sub> = &sum;<sub>k</sub> y<sub>k</sub> &middot; &mu;(E<sub>k</sub>), &nbsp; &mu;(E<sub>k</sub>) = G(y<sub>k+1</sub>) &minus; G(y<sub>k</sub>)</span></div>
+      where G(t) = &mu;{x : f(x) &lt; t} is the <i>distribution function</i> of f. Lower sum: level y<sub>k</sub>; upper sum: y<sub>k+1</sub>; mid-level sum: y<sub>k</sub> + &delta;/2. The last band is closed, so the maximum is not lost. This is the sum of the simple function &phi; &le; f that is constant on each E<sub>k</sub>.</div>
+  </div>
+  <p><b>How the measure of the preimage is obtained.</b> The Lebesgue approach needs &mu;(E<sub>k</sub>), i.e. it must be able to &ldquo;invert&rdquo; f. For our functions G is available in closed form (for example G(t) = 2 arcsin t for sin on [0, &pi;], G(t) = &radic;t for x&sup2;) or by a root search (bisection for sin x / x). We call this the <b>exact-preimage</b> Lebesgue sum. Where G is not known one can estimate &mu;(E<sub>k</sub>) from M sample points (a histogram of the values of f): the <b>sampled-preimage</b> sum, which costs M evaluations of f but needs no inverse.</p>
+  <div class="callout">Hypotheses: for a bounded f on [a, b], Riemann integrable &hArr; f is continuous almost everywhere (Lebesgue&rsquo;s criterion). Lebesgue integrable &hArr; f is measurable (and &int;|f| &lt; &infin;). Every Riemann integrable function is Lebesgue integrable with the same value; the converse fails (Dirichlet) and the improper case 1/&radic;x is covered by Lebesgue but not by the proper Riemann integral.</div>
+</section>
+
+<section class="card" id="see">
+  <h2><span class="num">2</span><span>See it: one function, one n</span></h2>
+  <div class="params">
+    <div class="wide"><label for="fsel">Function</label><select id="fsel" onchange="selectF()"></select></div>
+    <div><label for="nIn">n = cells = bands</label><input type="number" id="nIn" value="20" min="1" max="200000" onchange="renderAll()"></div>
+  </div>
+  <div class="box" id="fdesc"></div>
+  <div class="figs2"><figure><svg id="svgR"></svg></figure><figure><svg id="svgL"></svg></figure></div>
+  <p class="note">The pictures use at most 50 strips / bands so that they stay readable; the tables use the n you typed. In the right picture each vertical sliver is coloured by the band its function value falls in, so the <i>preimage</i> E<sub>k</sub> of a band is the set of slivers of one colour; the bar height is the level y<sub>k</sub>.</p>
+  <div class="tblwrap"><table class="res" id="resTab"></table></div>
+</section>
+
+<section class="card" id="all">
+  <h2><span class="num">3</span><span>All the functions at the same n</span></h2>
+  <p>Value and absolute error (below the value) for every function at n = <b id="nAll"></b> cells / bands. &ldquo;Rational tags&rdquo; are used for the two pathological functions in the Riemann columns (see Section 6).</p>
+  <div class="tblwrap"><table class="res" id="allTab"></table></div>
+  <div class="findings" id="allFinds"></div>
+</section>
+
+<section class="card" id="conv">
+  <h2><span class="num">4</span><span>Convergence</span></h2>
+  <p>Absolute error against n (2, 4, &hellip;, 65536) for the function chosen in Section 2, log&ndash;log scale. Points where the error is exactly 0 cannot be drawn on a log axis and are omitted. A straight line of slope &minus;p means error &asymp; C&middot;n<sup>&minus;p</sup>.</p>
+  <div class="figs2"><figure><svg id="svgConv"></svg></figure><div><div class="tblwrap"><table class="res" id="ordTab"></table></div><p class="note" id="ordNote"></p></div></div>
+</section>
+
+<section class="card" id="eff">
+  <h2><span class="num">5</span><span>Computational efficiency</span></h2>
+  <p>For the chosen function: work and wall-clock time of each method at n cells, and the number of cells each method needs to reach a target error.</p>
+  <div class="params"><div><label for="nT">n for timing</label><input type="number" id="nT" value="100000" min="10" max="1000000"></div><div><label for="tol">Target absolute error</label><input type="text" id="tol" value="1e-6"></div></div>
+  <button onclick="runEff()">Measure</button>
+  <div class="tblwrap"><table class="res" id="effTab"></table></div>
+  <div class="tblwrap"><table class="res" id="tolTab"></table></div>
+  <p class="note">Times are the best of 3 runs in your browser, so they change a little from run to run. &ldquo;Evaluations&rdquo; counts calls of f (Riemann, sampled Lebesgue), of inf/sup (Darboux, 2 per cell) or of the measure function G (Lebesgue).</p>
+</section>
+
+<section class="card" id="patho">
+  <h2><span class="num">6</span><span>Where the two approaches behave differently</span></h2>
+  <h3>Dirichlet and Thomae</h3>
+  <p>The Riemann sums of these functions depend on the <i>tags</i>, because every cell contains rational and irrational numbers. With rational tags k/n the Dirichlet sum is always 1; with irrational tags (k/n + &radic;2/(10n)) it is always 0. The Darboux sums are stuck at 0 and 1, so there is no common limit: <b>Dirichlet is not Riemann integrable</b>. For the Lebesgue sum nothing is ambiguous: the rationals have measure 0, the irrationals measure 1, hence &int; f = 1&middot;0 + 0&middot;1 = 0.</p>
+  <p>Thomae&rsquo;s function is different: it is continuous at every irrational and discontinuous only on the rationals (measure 0), so it <b>is</b> Riemann integrable, and its upper Darboux sum shrinks to 0 (only finitely many points have f &ge; &epsilon;). Both integrals are 0.</p>
+  <div class="tblwrap"><table class="res" id="pathoTab"></table></div>
+  <p class="note">Floating-point numbers are all rational, so a program can never &ldquo;evaluate&rdquo; the Dirichlet function on a random double; here the tags are handled symbolically (exact fractions p/q, or &ldquo;an irrational&rdquo;). This is itself a hint of why the Lebesgue viewpoint, which only needs the measure of the sets, is the right one for such functions.</p>
+  <h3>Improper case: 1/&radic;x on (0, 1]</h3>
+  <p>The left-tag sum needs f(0) = &infin; and the upper Darboux sum is infinite: the proper Riemann integral does not exist. Midpoint and lower sums converge, but slowly, with order only 1/2, because the singular cell carries an error of order &radic;h. The Lebesgue sum needs no special treatment of the point 0: the unbounded range is cut at a level Y (we take Y = 1 + &radic;N), and the discarded tail contributes about 1/Y.</p>
+  <div class="tblwrap"><table class="res" id="invTab"></table></div>
+</section>
+
+<section class="card" id="concl">
+  <h2><span class="num">7</span><span>Conclusions</span></h2>
+  <div id="conclText"></div>
+</section>
+</div>
+<script src="js/charts.js"></script>
+<script src="js/integ.js"></script>
+<script src="js/ex1.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="integration-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("integration-site.zip was not found next to the pages. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Homework - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet" style="min-height:92vh">
+<header>
+  <h1>Numerical integration and the normal CDF</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Two exercises: Riemann versus Lebesgue integration on regular and pathological functions, and the numerical computation of the standard normal CDF. Choose an exercise.</p>
+  <nav class="toc"><a href="ex1.html#idea">Riemann vs Lebesgue</a><a href="ex1.html#conv">Convergence</a><a href="ex1.html#patho">Dirichlet &amp; Thomae</a><a href="ex2.html#liou">Liouville</a><a href="ex2.html#acc">Accuracy vs reference</a><a href="ex2.html#eff">Efficiency</a></nav>
+  <a class="dl" href="integration-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+<div class="hub">
+  <a class="bigbtn" href="ex1.html">
+    <span class="tag2">Exercise 1</span>
+    <h2>Riemann and Lebesgue integration</h2>
+    <p>Nine functions integrated by slicing the domain (Riemann) and the range (Lebesgue): accuracy, convergence order and cost, plus the Dirichlet and Thomae functions and 1/&radic;x where the two approaches differ.</p>
+    <span class="go">Open Exercise 1 &rarr;</span>
+  </a>
+  <a class="bigbtn" href="ex2.html">
+    <span class="tag2">Exercise 2</span>
+    <h2>Numerical computation of the normal CDF</h2>
+    <p>Liouville&rsquo;s theorem, the error function, and seven methods (trapezoid, Simpson, series, continued fraction, erf approximation, hybrid) checked against an 80-digit reference and published tables.</p>
+    <span class="go">Open Exercise 2 &rarr;</span>
+  </a>
+</div>
+</div>
+<script>
+(function(){const a=document.querySelector("a.dl");a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="integration-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("integration-site.zip was not found next to index.html. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>
