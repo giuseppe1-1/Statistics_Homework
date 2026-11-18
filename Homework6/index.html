@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Statistical independence - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <h1>Homework &ndash; Statistical independence</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">From a bivariate dataset (X, F) to the contingency table, the marginal and conditional frequencies, the expected frequencies under independence, the Pearson chi-square statistic with its p-value, and the interpretation: independence versus dependence, and association versus causality. Use one of the real datasets, a simulation, or your own data.</p>
+  <nav class="toc"><a href="#data">1 Data</a><a href="#table">2 Contingency table</a><a href="#expected">3 Expected frequencies</a><a href="#test">4 Chi-square test</a><a href="#theory">5 Theory</a><a href="#interp">6 Interpretation</a><a href="#code">7 Code</a></nav>
+  <a class="dl" href="Homework6.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="data">
+  <h2><span class="num">1</span><span>The bivariate dataset (X, F)</span></h2>
+  <p>Each record is a pair (x, f) of two categorical variables. Choose a dataset: the page works on the <b>individual records</b> (the counts of the published tables are expanded into one record per person) and builds the contingency table from them, exactly as one would do with any raw file.</p>
+  <div class="params">
+    <div class="wide"><label for="ds">Dataset</label><select id="ds" onchange="dsChanged()"></select></div>
+    <div><label for="alpha">Significance level &alpha;</label><select id="alpha" onchange="update()"><option value="0.10">0.10</option><option value="0.05" selected>0.05</option><option value="0.01">0.01</option><option value="0.001">0.001</option></select></div>
+    <div><label for="perm">Permutations B</label><select id="perm" onchange="update()"><option value="0">none</option><option value="1000">1,000</option><option value="5000" selected>5,000</option><option value="20000">20,000</option></select></div>
+  </div>
+  <div class="params hidden" id="simBox">
+    <div><label for="simN">Sample size n</label><input type="number" id="simN" value="300" min="20" max="200000" onchange="update(true)"></div>
+    <div><label for="simS">Dependence strength s (0 = independent)</label><input type="number" id="simS" value="0.4" min="0" max="1" step="0.05" onchange="update(true)"></div>
+    <div><label for="simSeed">Seed</label><input type="number" id="simSeed" value="2327983" onchange="update(true)"></div>
+  </div>
+  <div class="hidden" id="custBox">
+    <div class="params">
+      <div><label for="custMode">Input format</label><select id="custMode" onchange="custModeChanged()"><option value="table">Table of counts (first row = column labels, first column = row labels)</option><option value="raw">Raw records: one pair &ldquo;x, f&rdquo; per line</option></select></div>
+      <div><label for="custFile">or load a .csv / .txt file</label><input type="file" id="custFile" accept=".csv,.txt,.tsv" onchange="loadFile(this)"></div>
+    </div>
+    <label for="custTxt">Your data (separators: comma, semicolon or tab)</label>
+    <textarea id="custTxt" class="short" style="height:130px" spellcheck="false"></textarea>
+    <button onclick="update(true)">Analyse my data</button>
+    <p class="note">Numeric variables with more than 12 distinct values are grouped automatically into 5 equal-frequency classes. A first line that looks like a header (non-numeric second field in raw mode and the second line is a pair) can be kept: it is treated as data unless you delete it.</p>
+  </div>
+  <div class="box" id="dsDesc"></div>
+  <div class="msg" id="dsMsg"></div>
+  <div class="tblwrap"><table class="res" id="recTab"></table></div>
+</section>
+
+<section class="card" id="table">
+  <h2><span class="num">2</span><span>Contingency table, marginal and conditional frequencies</span></h2>
+  <p>The contingency table counts the records with X = x<sub>i</sub> and F = f<sub>j</sub>: n<sub>ij</sub>. Its row and column totals n<sub>i&bull;</sub>, n<sub>&bull;j</sub> are the marginal counts and n = &sum; n<sub>ij</sub>.</p>
+  <div class="tabrow" id="tabBtns"></div>
+  <div class="tblwrap"><table class="res" id="freqTab"></table></div>
+  <p class="cap" id="freqCap"></p>
+  <div class="figs2"><figure><svg id="svgMosaic"></svg><figcaption>Mosaic plot: column width &prop; n<sub>i&bull;</sub>, tile height &prop; P(F = f<sub>j</sub> | X = x<sub>i</sub>), so each tile area &prop; n<sub>ij</sub>. Colour = Pearson residual (blue: more than expected under independence, orange: fewer, grey: |residual| &lt; 2).</figcaption></figure>
+  <figure><svg id="svgBars"></svg><figcaption>Conditional distributions of F given each x<sub>i</sub> against the marginal distribution of F (last bar). Under independence all the bars would be identical.</figcaption></figure></div>
+</section>
+
+<section class="card" id="expected">
+  <h2><span class="num">3</span><span>Expected frequencies under independence</span></h2>
+  <p>If X and F were independent, P(X = x<sub>i</sub>, F = f<sub>j</sub>) = P(X = x<sub>i</sub>)&middot;P(F = f<sub>j</sub>), estimated with the marginal relative frequencies. The expected count of cell (i, j) is therefore</p>
+  <div class="result"><span class="eq">E<sub>ij</sub> = n &middot; (n<sub>i&bull;</sub>/n) &middot; (n<sub>&bull;j</sub>/n) = n<sub>i&bull;</sub> n<sub>&bull;j</sub> / n</span></div>
+  <div class="tabrow" id="expBtns"></div>
+  <div class="tblwrap"><table class="res" id="expTab"></table></div>
+  <p class="cap" id="expCap"></p>
+</section>
+
+<section class="card" id="test">
+  <h2><span class="num">4</span><span>Pearson&rsquo;s chi-square test of independence</span></h2>
+  <div class="result"><span class="eq">&chi;&sup2; = &sum;<sub>i,j</sub> (O<sub>ij</sub> &minus; E<sub>ij</sub>)&sup2; / E<sub>ij</sub>, &nbsp;&nbsp; df = (r &minus; 1)(c &minus; 1), &nbsp;&nbsp; p = P(&chi;&sup2;<sub>df</sub> &ge; &chi;&sup2;<sub>obs</sub>)</span>
+    <span class="sub">H<sub>0</sub>: X and F are independent &nbsp;&nbsp; H<sub>1</sub>: X and F are dependent (associated). Reject H<sub>0</sub> when p &lt; &alpha;, i.e. when &chi;&sup2; exceeds the critical value.</span></div>
+  <div class="kpis" id="kpis"></div>
+  <p id="testNote"></p>
+  <h3>Other tests, as a check</h3>
+  <div class="tblwrap"><table class="res" id="altTab"></table></div>
+  <div class="figs2"><figure><svg id="svgPerm"></svg><figcaption id="permCap">Distribution of &chi;&sup2; when the labels of F are randomly shuffled (independence by construction) against the theoretical &chi;&sup2;(df) density.</figcaption></figure>
+  <div><h3 style="margin-top:0">Size of the association</h3><div class="tblwrap"><table class="res" id="effTab"></table></div></div></div>
+</section>
+
+<section class="card" id="theory">
+  <h2><span class="num">5</span><span>Theory in brief</span></h2>
+  <h3>Independence in probability</h3>
+  <ul class="plain">
+    <li><b>Events.</b> A and B are independent if P(A &cap; B) = P(A) P(B); when P(B) &gt; 0 this means P(A | B) = P(A): knowing B does not change the probability of A.</li>
+    <li><b>Discrete random variables.</b> X and F are independent if P(X = x, F = f) = P(X = x) P(F = f) for <i>all</i> pairs (x, f); equivalently P(F = f | X = x) = P(F = f) for every x (all conditional distributions coincide with the marginal one), equivalently the joint cdf factorises. For a table this means that all the <i>row profiles</i> are equal.</li>
+    <li><b>Independence implies zero covariance, not the converse</b>: if X is uniform on {&minus;1, 0, 1} and F = X&sup2;, then Cov(X, F) = 0 but F is a function of X.</li>
+  </ul>
+  <h3>From probabilities to the sample</h3>
+  <ul class="plain">
+    <li>The sample versions are the relative frequencies f<sub>ij</sub> = n<sub>ij</sub>/n, f<sub>i&bull;</sub> = n<sub>i&bull;</sub>/n, f<sub>&bull;j</sub> = n<sub>&bull;j</sub>/n, and the conditional frequencies f<sub>j|i</sub> = n<sub>ij</sub>/n<sub>i&bull;</sub>. Empirical independence would be f<sub>ij</sub> = f<sub>i&bull;</sub> f<sub>&bull;j</sub>, i.e. n<sub>ij</sub> = E<sub>ij</sub>. Because of sampling variability, even independent variables never give exactly n<sub>ij</sub> = E<sub>ij</sub>: we need a test to decide whether the differences are too large to be chance.</li>
+    <li><b>Why (O &minus; E)&sup2;/E.</b> Under H<sub>0</sub> each count O<sub>ij</sub> has mean E<sub>ij</sub> and variance about E<sub>ij</sub>, so (O &minus; E)/&radic;E is approximately N(0, 1) and its square is approximately &chi;&sup2;(1).</li>
+    <li><b>Why df = (r &minus; 1)(c &minus; 1).</b> There are rc cells; one linear constraint (the total n) and the r &minus; 1 and c &minus; 1 independent parameters estimated from the margins remove rc &minus; 1 &minus; (r &minus; 1) &minus; (c &minus; 1) = (r &minus; 1)(c &minus; 1) degrees of freedom. By Pearson&rsquo;s theorem (1900) &chi;&sup2; is asymptotically &chi;&sup2;(df) under H<sub>0</sub>.</li>
+    <li><b>The p-value</b> is the probability, if H<sub>0</sub> were true, of a statistic at least as large as the observed one: p = Q(df/2, &chi;&sup2;/2), the regularised upper incomplete gamma function, implemented here from scratch (series + continued fraction) and checked against SciPy.</li>
+    <li><b>Conditions.</b> Independent observations; n large enough for the approximation (rule of thumb: all E<sub>ij</sub> &ge; 5, or at least 80% of them &ge; 5 and none below 1). Otherwise use Fisher&rsquo;s exact test (2&times;2), merge categories, or a permutation test, as done below.</li>
+  </ul>
+</section>
+
+<section class="card" id="interp">
+  <h2><span class="num">6</span><span>Interpretation and conclusions</span></h2>
+  <div class="findings" id="findings"></div>
+  <div id="strataBox"></div>
+  <h3>Statistical association is not causation</h3>
+  <ul class="plain">
+    <li><b>What the test says.</b> A small p-value says that the data are hard to reconcile with independence: X and F are <i>statistically associated</i>. It says nothing about <i>why</i>, nor about the direction: the chi-square statistic is symmetric in X and F.</li>
+    <li><b>Possible explanations of an association:</b> X influences F; F influences X (reverse causation); a third variable Z influences both (confounding); the sample was selected in a way that links them (selection bias); or chance (a 5% false-positive rate is built into every test at &alpha; = 0.05).</li>
+    <li><b>Confounding and Simpson&rsquo;s paradox.</b> An association in the pooled table can vanish or reverse inside the strata of a third variable (see the Berkeley data: the pooled table shows a gap against women, the department-level tables do not). Conditioning on the right variables matters, and which variables are right depends on the causal story, not on the data alone.</li>
+    <li><b>Significance is not importance.</b> With a large n, tiny departures from independence are &ldquo;significant&rdquo;; always report an effect size (Cramér&rsquo;s V, odds ratio) and look at which cells drive the statistic. Try the simulated dataset with a small s and increasing n.</li>
+    <li><b>Not rejecting H<sub>0</sub> is not proof of independence</b>: with a small n the test has little power. Independence (zero association) is also different from zero correlation for numeric variables.</li>
+    <li><b>Causal claims</b> need a design that rules out the alternatives: randomised experiments (assigning X at random breaks every link with confounders), or explicit causal models and adjustment for confounders in observational data.</li>
+  </ul>
+</section>
+
+<section class="card" id="code">
+  <h2><span class="num">7</span><span>The code</span></h2>
+  <p>The whole analysis, without any statistics library (<code>independence.py</code> also contains the incomplete gamma function and a SciPy cross-check; the browser version is in <code>js/stats.js</code>):</p>
+  <pre class="code" id="pyCode"><button class="copy ghost" onclick="copyCode('pyCode', this)">Copy</button>from collections import Counter
+
+def contingency(pairs):                      # pairs = [(x, f), ...]
+    rows = sorted({x for x, _ in pairs}); cols = sorted({f for _, f in pairs})
+    cnt = Counter(pairs)
+    return rows, cols, [[cnt[(x, f)] for f in cols] for x in rows]
+
+def independence_test(O):
+    r, c = len(O), len(O[0])
+    row = [sum(O[i]) for i in range(r)]                          # n_i.
+    col = [sum(O[i][j] for i in range(r)) for j in range(c)]     # n_.j
+    n = sum(row)
+    E = [[row[i] * col[j] / n for j in range(c)] for i in range(r)]            # expected under independence
+    chi2 = sum((O[i][j] - E[i][j]) ** 2 / E[i][j] for i in range(r) for j in range(c))
+    df = (r - 1) * (c - 1)
+    return chi2, df, E                                            # p = chi2_sf(chi2, df)</pre>
+  <pre class="code" id="jsCode"><button class="copy ghost" onclick="copyCode('jsCode', this)">Copy</button>const rowTot = O.map(r =&gt; r.reduce((a, b) =&gt; a + b, 0));
+const colTot = O[0].map((_, j) =&gt; O.reduce((a, r) =&gt; a + r[j], 0));
+const n = rowTot.reduce((a, b) =&gt; a + b, 0);
+const E = O.map((r, i) =&gt; r.map((_, j) =&gt; rowTot[i] * colTot[j] / n));
+const chi2 = O.flat().reduce((s, o, k) =&gt; { const e = E.flat()[k]; return s + (o - e) ** 2 / e; }, 0);
+const df = (O.length - 1) * (O[0].length - 1);
+const p = chi2sf(chi2, df);          // upper tail of the chi-square distribution</pre>
+</section>
+</div>
+<script src="js/charts.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/app.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="independence-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("independence-site.zip was not found next to index.html. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>
