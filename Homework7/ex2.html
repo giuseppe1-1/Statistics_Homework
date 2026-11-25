@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bayes and inference - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="navtop"><a href="index.html">&larr; Menu</a><a href="ex1.html">&larr; Convergence</a></div>
+  <h1>Conditional probability, Bayes&rsquo; theorem and statistical inference</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Conditional probability and Bayes&rsquo; theorem, the three components of Bayesian inference (prior, likelihood, posterior), how the updating works, and worked examples with real calculations: a diagnostic test, a Beta&ndash;Binomial model, a Normal&ndash;Normal model, and the influence of the prior on the conclusions.</p>
+  <nav class="toc"><a href="#cond">1 Conditional probability</a><a href="#bayes">2 Bayes&rsquo; theorem</a><a href="#beta">3 Beta&ndash;Binomial</a><a href="#prior">4 Influence of the prior</a><a href="#normal">5 Normal&ndash;Normal</a><a href="#pros">6 Pros and cons</a></nav>
+  <a class="dl" href="probability-site.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="cond">
+  <h2><span class="num">1</span><span>Conditional probability</span></h2>
+  <div class="result"><span class="eq">P(A | B) = P(A &cap; B) / P(B), &nbsp;&nbsp; P(B) &gt; 0</span><span class="sub">Probability of A when we know that B has occurred: the sample space shrinks from &Omega; to B and probabilities are renormalised.</span></div>
+  <ul class="plain">
+    <li><b>In probability theory</b> it gives the multiplication rule P(A &cap; B) = P(A | B) P(B), the law of total probability P(A) = &sum;<sub>i</sub> P(A | B<sub>i</sub>) P(B<sub>i</sub>) (B<sub>i</sub> a partition), and the definition of independence: A and B are independent iff P(A | B) = P(A). It extends to random variables: the conditional distribution f(y | x) = f(x, y)/f<sub>X</sub>(x) and the conditional expectation E[Y | X], the best predictor of Y given X in mean square.</li>
+    <li><b>In statistics</b> a conditional probability is a <i>conditional relative frequency</i> (row percentages of a contingency table), the basis of regression (E[Y | X = x]), of classification (P(class | features)) and of every comparison between groups. The same events give two different conditionals: P(A | B) &ne; P(B | A) in general (&ldquo;confusion of the inverse&rdquo;); the link between them is Bayes&rsquo; theorem.</li>
+  </ul>
+  <h3>Example: a diagnostic test</h3>
+  <p>A disease has prevalence P(D) (the prior), the test has sensitivity P(+ | D) and specificity P(&minus; | not D). What a patient wants to know is P(D | +), not the sensitivity.</p>
+  <div class="params">
+    <div><label for="prev">Prevalence P(D), %</label><input type="number" id="prev" value="1" min="0.01" max="99" step="0.1" oninput="runDiag()"></div>
+    <div><label for="sens">Sensitivity P(+ | D), %</label><input type="number" id="sens" value="90" min="1" max="99.9" step="1" oninput="runDiag()"></div>
+    <div><label for="spec">Specificity P(&minus; | not D), %</label><input type="number" id="spec" value="95" min="1" max="99.9" step="1" oninput="runDiag()"></div>
+  </div>
+  <div class="kpis" id="dKpis"></div>
+  <div class="figs2"><figure><svg id="svgD1"></svg><figcaption>Area diagram for 10,000 people: width &prop; prevalence, height &prop; P(test result | status). Among the positives (green + orange) only the green share is truly ill.</figcaption></figure><figure><svg id="svgD2"></svg><figcaption>P(D | +) against the prevalence for the chosen test (dot: your value). The same test is far less informative for rare conditions.</figcaption></figure></div>
+  <div class="tblwrap"><table class="res" id="dTab"></table></div>
+</section>
+
+<section class="card" id="bayes">
+  <h2><span class="num">2</span><span>Bayes&rsquo; theorem and the three components</span></h2>
+  <div class="result"><span class="eq">P(H | D) = P(D | H) P(H) / P(D), &nbsp;&nbsp; P(D) = &sum;<sub>i</sub> P(D | H<sub>i</sub>) P(H<sub>i</sub>)</span>
+  <span class="eq">&pi;(&theta; | x) = L(&theta;; x) &pi;(&theta;) / &int; L(&theta;; x) &pi;(&theta;) d&theta; &nbsp;&prop;&nbsp; L(&theta;; x) &middot; &pi;(&theta;)</span>
+  <span class="sub">It follows from the multiplication rule written twice: P(H &cap; D) = P(D | H) P(H) = P(H | D) P(D).</span></div>
+  <div class="tblwrap"><table class="res">
+    <tr><th>Component</th><th>Symbol</th><th>Meaning</th><th>Where it comes from</th></tr>
+    <tr><td><b>Prior</b></td><td>&pi;(&theta;), P(H)</td><td>What we believe about the unknown <i>before</i> seeing the data</td><td>earlier studies, expert knowledge, a convention of ignorance (flat / Jeffreys prior)</td></tr>
+    <tr><td><b>Likelihood</b></td><td>L(&theta;; x) = P(x | &theta;)</td><td>How well each value of &theta; explains the observed data. A function of &theta; with x fixed: it is <b>not</b> a probability distribution of &theta; (it does not integrate to 1)</td><td>the statistical model; the only ingredient shared with frequentist inference</td></tr>
+    <tr><td><b>Posterior</b></td><td>&pi;(&theta; | x), P(H | D)</td><td>What we believe <i>after</i> seeing the data: prior reweighted by the likelihood and renormalised</td><td>Bayes&rsquo; theorem</td></tr>
+    <tr><td>Evidence (marginal likelihood)</td><td>P(D), m(x)</td><td>Normalising constant; average of the likelihood over the prior; used to compare models</td><td>sum / integral over &theta;</td></tr>
+  </table></div>
+  <ul class="plain">
+    <li><b>The update.</b> Multiply, then renormalise: values of &theta; that explain the data well and were already plausible gain weight; the others lose it. In odds form, <b>posterior odds = prior odds &times; likelihood ratio</b> (Bayes factor): P(H | D)/P(H<sup>c</sup> | D) = [P(H)/P(H<sup>c</sup>)] &middot; [P(D | H)/P(D | H<sup>c</sup>)].</li>
+    <li><b>Why it is central.</b> It is the only coherent way to combine existing information with new data, it answers the question people actually ask (the probability of a hypothesis or of a parameter value given the data, not of the data given a hypothesis), and the update is <b>sequential</b>: yesterday&rsquo;s posterior is today&rsquo;s prior, and processing the data in batches or all at once gives the same result.</li>
+  </ul>
+  <h3>Sequential updating: repeated positive tests</h3>
+  <p>With the test of Section 1 (conditionally independent repetitions), each positive result multiplies the odds by LR<sub>+</sub> = sensitivity / (1 &minus; specificity).</p>
+  <div class="figs2"><div class="tblwrap"><table class="res" id="sTab"></table></div><figure><svg id="svgS"></svg><figcaption>The posterior after k positive results becomes the prior for the next one.</figcaption></figure></div>
+</section>
+
+<section class="card" id="beta">
+  <h2><span class="num">3</span><span>Prior, likelihood and posterior for a proportion: the Beta&ndash;Binomial model</span></h2>
+  <p>Unknown success probability &theta; (a conversion rate, a defect rate, a coin&rsquo;s bias); data: x successes in n independent trials.</p>
+  <div class="deriv">
+    <span class="eq">Likelihood: L(&theta;; x) = C(n, x) &theta;<sup>x</sup> (1 &minus; &theta;)<sup>n&minus;x</sup></span>
+    <span class="eq">Prior: &pi;(&theta;) &prop; &theta;<sup>a&minus;1</sup> (1 &minus; &theta;)<sup>b&minus;1</sup> &nbsp;&nbsp; (Beta(a, b), mean a/(a+b))</span>
+    <span class="eq">Posterior &prop; &theta;<sup>x+a&minus;1</sup> (1 &minus; &theta;)<sup>n&minus;x+b&minus;1</sup> &nbsp;&rArr;&nbsp; <b>Beta(a + x, b + n &minus; x)</b></span>
+    <span class="why">The Beta prior is <i>conjugate</i>: the posterior is in the same family, and updating is just adding counts. a and b act as pseudo-observations (a successes, b failures) that were seen before the data.</span>
+    <span class="eq">Posterior mean = (a + x)/(a + b + n) = w &middot; [a/(a+b)] + (1 &minus; w) &middot; (x/n), &nbsp; w = (a + b)/(a + b + n)</span>
+    <span class="why">a weighted average of the prior mean and the maximum-likelihood estimate: &ldquo;shrinkage&rdquo; towards the prior, strongest when n is small or the prior is concentrated.</span>
+  </div>
+  <div class="params">
+    <div><label for="bn">Trials n</label><input type="number" id="bn" value="20" min="1" max="100000" oninput="runBeta()"></div>
+    <div><label for="bx">Successes x</label><input type="number" id="bx" value="14" min="0" oninput="runBeta()"></div>
+    <div class="wide"><label for="bp">Prior</label><select id="bp" onchange="runBeta()"></select></div>
+    <div><label for="ba">Custom a</label><input type="number" id="ba" value="3" min="0.1" step="0.1" oninput="runBeta()"></div>
+    <div><label for="bb">Custom b</label><input type="number" id="bb" value="7" min="0.1" step="0.1" oninput="runBeta()"></div>
+    <div><label for="bt">Threshold &theta;<sub>0</sub></label><input type="number" id="bt" value="0.5" min="0" max="1" step="0.05" oninput="runBeta()"></div>
+  </div>
+  <div class="figs2"><figure><svg id="svgB1"></svg><figcaption>Prior (orange, dashed), likelihood rescaled to area 1 (green) and posterior (blue). The posterior lies between the other two.</figcaption></figure><div><div class="tblwrap"><table class="res" id="bTab"></table></div><p class="note" id="bNote"></p></div></div>
+</section>
+
+<section class="card" id="prior">
+  <h2><span class="num">4</span><span>How much does the prior matter?</span></h2>
+  <h3>Same data, different priors</h3>
+  <p>The posterior for the data of Section 3 under five priors, from vague to opinionated. With little data the conclusions differ; the likelihood is the same in all cases.</p>
+  <div class="figs2"><figure><svg id="svgP1"></svg><figcaption>Posterior densities for the data of Section 3 under each prior.</figcaption></figure><div class="tblwrap"><table class="res" id="pTab"></table></div></div>
+  <h3>The prior washes out as data accumulate</h3>
+  <div class="params">
+    <div><label for="wt">True &theta; (simulation)</label><input type="number" id="wt" value="0.7" min="0.01" max="0.99" step="0.01" onchange="runWash()"></div>
+    <div><label for="wN">Observations N</label><input type="number" id="wN" value="500" min="20" max="5000" step="20" onchange="runWash()"></div>
+    <div><button onclick="newWash()">New data</button></div>
+  </div>
+  <div class="figs2"><figure><svg id="svgW"></svg><figcaption>Posterior mean after n observations of one simulated data set, for five priors (dashed: the frequentist estimate x/n). All priors that give positive weight to the true value converge to it.</figcaption></figure><div class="findings" id="wFinds" style="margin-top:0"></div></div>
+  <div class="callout"><b>Cromwell&rsquo;s rule.</b> A prior that gives probability 0 to a value can never be revised towards it, however much data arrive (0 &times; anything = 0). A dogmatic prior such as Beta(2, 30) (mass near 0.06) needs many observations to be overturned; a point mass never. Leave some prior probability on every plausible value.</div>
+</section>
+
+<section class="card" id="normal">
+  <h2><span class="num">5</span><span>Prior and likelihood for a mean: the Normal&ndash;Normal model</span></h2>
+  <p>Data x&#772; from n observations N(&theta;, &sigma;&sup2;) with &sigma; known; prior &theta; ~ N(&mu;<sub>0</sub>, &tau;&sup2;). Working with <b>precisions</b> (1/variance), the posterior is normal with</p>
+  <div class="result"><span class="eq">1/&tau;<sub>n</sub>&sup2; = 1/&tau;&sup2; + n/&sigma;&sup2; , &nbsp;&nbsp; &mu;<sub>n</sub> = (&mu;<sub>0</sub>/&tau;&sup2; + n x&#772;/&sigma;&sup2;) &middot; &tau;<sub>n</sub>&sup2;</span><span class="sub">Precisions add; the posterior mean is the precision-weighted average of the prior mean and the sample mean. With a flat prior (&tau; &rarr; &infin;) it becomes x&#772; &plusmn; &sigma;/&radic;n, the frequentist answer.</span></div>
+  <div class="params">
+    <div><label for="m0">Prior mean &mu;<sub>0</sub></label><input type="number" id="m0" value="70" step="any" oninput="runNormal()"></div>
+    <div><label for="tau">Prior sd &tau;</label><input type="number" id="tau" value="10" min="0.1" step="any" oninput="runNormal()"></div>
+    <div><label for="sg">Known sd &sigma;</label><input type="number" id="sg" value="15" min="0.1" step="any" oninput="runNormal()"></div>
+    <div><label for="xb">Sample mean x&#772;</label><input type="number" id="xb" value="80" step="any" oninput="runNormal()"></div>
+    <div><label for="nn">Sample size n</label><input type="number" id="nn" value="9" min="1" oninput="runNormal()"></div>
+  </div>
+  <div class="figs2"><figure><svg id="svgN"></svg><figcaption>Prior (orange), likelihood of &theta; (green: N(x&#772;, &sigma;&sup2;/n)) and posterior (blue).</figcaption></figure><div><div class="tblwrap"><table class="res" id="nTab"></table></div><p class="note" id="nNote"></p></div></div>
+</section>
+
+<section class="card" id="pros">
+  <h2><span class="num">6</span><span>Applications, advantages, limitations</span></h2>
+  <div class="tblwrap"><table class="res">
+    <tr><th>Advantages</th><th>Limitations</th></tr>
+    <tr><td>Uses prior information formally (earlier trials, physical constraints, expert knowledge) and reports how it changed.</td><td><b>Prior specification</b> is subjective; different reasonable priors can give different conclusions with small samples (Section 4). Sensitivity analysis is part of the job.</td></tr>
+    <tr><td>Direct statements about the parameter: &ldquo;P(&theta; &gt; 0.5 | data) = 0.94&rdquo;, &ldquo;95% credible interval&rdquo;. This is what most users think a confidence interval or p-value means.</td><td>Intervals and probabilities depend on the model and the prior; a bad model gives confident nonsense. Credible intervals do not in general have frequentist coverage guarantees.</td></tr>
+    <tr><td>Sequential updating and online learning; no fixed sample size or stopping rule needed.</td><td>Computation: only conjugate cases are closed-form; in general MCMC / variational inference is needed (cost, convergence diagnostics).</td></tr>
+    <tr><td>Natural regularisation: small samples, rare events, many parameters (shrinkage; the MAP estimate with a Gaussian prior is ridge regression, with a Laplace prior the lasso).</td><td>Improper or vague priors can behave badly (e.g. Bayes factors, the Jeffreys&ndash;Lindley paradox); a prior that excludes the truth is never corrected (Cromwell&rsquo;s rule).</td></tr>
+    <tr><td>Hierarchical models, missing data, decision theory (minimising expected loss) fit naturally.</td><td>Posterior probabilities of hypotheses are conditional on the model class: the true model may not be in it.</td></tr>
+  </table></div>
+  <h3>Typical applications</h3>
+  <ul class="plain">
+    <li><b>Diagnostic testing and screening</b> (Section 1): the posterior depends on prevalence as much as on the quality of the test.</li>
+    <li><b>Spam filters / Naive Bayes classifiers:</b> P(spam | words) &prop; P(spam) &prod; P(word | spam), assuming the words conditionally independent.</li>
+    <li><b>A/B tests and conversion rates</b> (Beta&ndash;Binomial): P(rate B &gt; rate A | data), expected loss, early stopping.</li>
+    <li><b>Estimation with prior knowledge</b> (Normal&ndash;Normal): combining a measurement with a previous estimate: Kalman filter, meta-analysis, small-area estimation.</li>
+    <li><b>Forensics and law:</b> the likelihood ratio of the evidence, and the &ldquo;prosecutor&rsquo;s fallacy&rdquo; (P(evidence | innocent) mistaken for P(innocent | evidence)).</li>
+  </ul>
+  <h3>Frequentist versus Bayesian conclusions</h3>
+  <ul class="plain">
+    <li>Frequentist: &theta; is a fixed unknown, probability = long-run frequency of the <i>procedure</i>; a 95% confidence interval covers &theta; in 95% of repetitions, p-value = P(data at least this extreme | H<sub>0</sub>).</li>
+    <li>Bayesian: &theta; is described by a distribution of belief; a 95% credible interval has probability 0.95 of containing &theta; <i>given the data and the prior</i>; the output is P(H | data).</li>
+    <li>With a lot of data and a non-dogmatic prior the two agree numerically (Bernstein&ndash;von Mises theorem: the posterior is approximately N(&theta;&#770;<sub>MLE</sub>, 1/(n I(&theta;)))). They differ most for small samples, informative priors and hypothesis testing; compare the Wilson and credible intervals in Section 3.</li>
+  </ul>
+  <div class="callout"><b>Conclusion.</b> Bayes&rsquo; theorem turns the likelihood, which says how probable the data are under each hypothesis, into the posterior, which says how probable each hypothesis is given the data, by weighting with the prior. The prior is both the strength and the weak point: it lets us use what we know, but it must be stated, justified and tested for sensitivity; with enough data the likelihood dominates and reasonable analysts agree.</div>
+</section>
+</div>
+<script src="js/charts.js"></script>
+<script src="js/prob.js"></script>
+<script src="js/ex2.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="probability-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("probability-site.zip was not found next to the pages. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>

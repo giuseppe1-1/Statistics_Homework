@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modes of convergence - Giuseppe Signorelli (2327983)</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="sheet">
+<header>
+  <div class="navtop"><a href="index.html">&larr; Menu</a><a href="ex2.html">Bayes &rarr;</a></div>
+  <h1>Modes of convergence in probability theory</h1>
+  <p class="student">Giuseppe Signorelli &middot; Matricola 2327983</p>
+  <p class="sub">Convergence in probability, almost sure, in mean square (L&sup2;) and in distribution: definitions, how they relate, what each one does in the Law of Large Numbers and in the Central Limit Theorem, and why &radic;n appears. Every statement is backed by a simulation you can re-run with your own parameters.</p>
+  <nav class="toc"><a href="#modes">1 The four modes</a><a href="#gallery">2 Counterexamples</a><a href="#lln">3 LLN</a><a href="#clt">4 CLT</a><a href="#sqrt">5 Why &radic;n</a><a href="#summary">6 Summary</a></nav>
+  <a class="dl" href="Homework7.zip" download>&#11015; Download all files (.zip)</a>
+</header>
+
+<section class="card" id="modes">
+  <h2><span class="num">1</span><span>The four modes of convergence</span></h2>
+  <p>Let X<sub>1</sub>, X<sub>2</sub>, &hellip; and X be random variables on a probability space (&Omega;, &#8497;, P): each X<sub>n</sub> is a <i>function</i> of the outcome &omega;. &ldquo;X<sub>n</sub> &rarr; X&rdquo; can mean four different things, depending on what has to be small.</p>
+  <div class="tblwrap"><table class="res">
+    <tr><th>Mode</th><th>Definition</th><th>In words</th></tr>
+    <tr><td><b>In probability</b><br>X<sub>n</sub> &rarr;<sup>P</sup> X</td><td>for every &epsilon; &gt; 0: P(|X<sub>n</sub> &minus; X| &gt; &epsilon;) &rarr; 0</td><td>At a fixed large n the probability of a noticeable error is small. The &ldquo;bad&rdquo; outcomes may be different for every n.</td></tr>
+    <tr><td><b>Almost surely</b><br>X<sub>n</sub> &rarr;<sup>a.s.</sup> X</td><td>P(&omega; : X<sub>n</sub>(&omega;) &rarr; X(&omega;)) = 1 &nbsp;&hArr;&nbsp; for every &epsilon;: P(sup<sub>k&ge;n</sub> |X<sub>k</sub> &minus; X| &gt; &epsilon;) &rarr; 0</td><td>For almost every outcome, the <i>whole path</i> X<sub>n</sub>(&omega;) ends up (and stays) close to X(&omega;). The error has to be small <b>simultaneously for all k &ge; n</b>.</td></tr>
+    <tr><td><b>Mean square (L&sup2;)</b><br>X<sub>n</sub> &rarr;<sup>L&sup2;</sup> X</td><td>E|X<sub>n</sub> &minus; X|&sup2; &rarr; 0</td><td>The <i>average</i> squared error vanishes. Needs finite second moments; it is the mean squared error of an estimator.</td></tr>
+    <tr><td><b>In distribution</b><br>X<sub>n</sub> &rarr;<sup>d</sup> X</td><td>F<sub>n</sub>(x) &rarr; F(x) at every continuity point x of F &nbsp;&hArr;&nbsp; E g(X<sub>n</sub>) &rarr; E g(X) for every bounded continuous g</td><td>Only the <i>laws</i> become close. X<sub>n</sub> need not be close to anything as a function of &omega; (they may even live on different probability spaces).</td></tr>
+  </table></div>
+  <h3>How they are related</h3>
+  <div class="figs"><figure><svg id="svgImpl" viewBox="0 0 700 250" role="img" aria-label="Implications between the modes of convergence">
+    <defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4aa8ee"/></marker></defs>
+    <g style="font-family:inherit">
+      <rect x="20" y="25" width="190" height="52" rx="12" style="fill:var(--soft);stroke:var(--main);stroke-width:1.5"/><text class="tx2" x="115" y="48" font-size="15" text-anchor="middle" font-weight="700">almost sure</text><text class="tx" x="115" y="66" font-size="12" text-anchor="middle">(strong LLN)</text>
+      <rect x="20" y="165" width="190" height="52" rx="12" style="fill:var(--soft);stroke:var(--main);stroke-width:1.5"/><text class="tx2" x="115" y="188" font-size="15" text-anchor="middle" font-weight="700">mean square L²</text><text class="tx" x="115" y="206" font-size="12" text-anchor="middle">(MSE → 0)</text>
+      <rect x="280" y="95" width="190" height="60" rx="12" style="fill:var(--soft);stroke:var(--main);stroke-width:1.5"/><text class="tx2" x="375" y="120" font-size="15" text-anchor="middle" font-weight="700">in probability</text><text class="tx" x="375" y="140" font-size="12" text-anchor="middle">(weak LLN, consistency)</text>
+      <rect x="520" y="95" width="165" height="60" rx="12" style="fill:var(--soft);stroke:var(--main);stroke-width:1.5"/><text class="tx2" x="602" y="120" font-size="15" text-anchor="middle" font-weight="700">in distribution</text><text class="tx" x="602" y="140" font-size="12" text-anchor="middle">(CLT)</text>
+    </g>
+    <line x1="210" y1="60" x2="290" y2="100" stroke="#4aa8ee" stroke-width="2.4" marker-end="url(#ar)"/>
+    <line x1="210" y1="182" x2="290" y2="150" stroke="#4aa8ee" stroke-width="2.4" marker-end="url(#ar)"/>
+    <line x1="470" y1="125" x2="518" y2="125" stroke="#4aa8ee" stroke-width="2.4" marker-end="url(#ar)"/>
+    <path d="M520,160 C 480,215 430,215 400,160" fill="none" stroke="#ffa94d" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+    <text class="tx" x="545" y="200" font-size="12" text-anchor="middle">only if the limit is a constant</text>
+    <text class="tx" x="115" y="124" font-size="12" text-anchor="middle">no implication either way</text>
+    <text class="tx" x="115" y="138" font-size="12" text-anchor="middle">between a.s. and L²</text>
+    <text class="tx" x="298" y="28" font-size="12">chain: a.s. ⇒ P ⇒ d  and  L² ⇒ P ⇒ d</text>
+    <text class="tx" x="298" y="46" font-size="12">partial converses: P ⇒ a.s. along a subsequence;</text>
+    <text class="tx" x="298" y="62" font-size="12">a.s. (or P) + domination / uniform integrability ⇒ L<tspan dy="-4" font-size="9">p</tspan></text>
+  </svg><figcaption>Solid arrows are always valid implications; none can be reversed in general (Section 2 gives a counterexample for each missing arrow). The dashed arrow is a partial converse: if X<sub>n</sub> &rarr;<sup>d</sup> c, a constant, then X<sub>n</sub> &rarr;<sup>P</sup> c.</figcaption></figure></div>
+  <h3>Why the implications hold</h3>
+  <div class="deriv">
+    <span class="eq">L&sup2; &rArr; P : &nbsp; P(|X<sub>n</sub> &minus; X| &gt; &epsilon;) &le; E|X<sub>n</sub> &minus; X|&sup2; / &epsilon;&sup2;</span><span class="why">Markov / Chebyshev inequality</span>
+    <span class="eq">a.s. &rArr; P : &nbsp; P(|X<sub>n</sub> &minus; X| &gt; &epsilon;) &le; P(sup<sub>k&ge;n</sub> |X<sub>k</sub> &minus; X| &gt; &epsilon;) &rarr; 0</span><span class="why">the events {sup<sub>k&ge;n</sub> &hellip; &gt; &epsilon;} decrease to the null event {X<sub>n</sub> &nrarr; X}</span>
+    <span class="eq">P &rArr; d : &nbsp; |E g(X<sub>n</sub>) &minus; E g(X)| &le; E |g(X<sub>n</sub>) &minus; g(X)| &rarr; 0</span><span class="why">for bounded uniformly continuous g (and these g are enough to characterise convergence in distribution)</span>
+    <span class="eq">Borel&ndash;Cantelli : &nbsp; &sum;<sub>n</sub> P(|X<sub>n</sub> &minus; X| &gt; &epsilon;) &lt; &infin; &rArr; X<sub>n</sub> &rarr;<sup>a.s.</sup> X</span><span class="why">a sufficient condition for a.s. convergence; the second lemma (independent events, divergent sum) shows when it fails</span>
+  </div>
+  <div class="callout"><b>What is lost in each step.</b> Moving from a.s. to P we forget <i>which</i> outcomes are bad and keep only how many; from P to d we forget the pairing between X<sub>n</sub> and X and keep only the laws; L&sup2; is a different type of control (moments, not paths): it forbids rare but huge values, which a.s. and P allow.</div>
+</section>
+
+<section class="card" id="gallery">
+  <h2><span class="num">2</span><span>Counterexamples: five sequences, three modes measured</span></h2>
+  <p>For each sequence X<sub>n</sub> &rarr; 0 we estimate by simulation (M independent paths up to N) the three quantities that define the modes: <b>P(|X<sub>n</sub>| &gt; &epsilon;)</b> (in probability), <b>P(sup<sub>k&ge;n</sub> |X<sub>k</sub>| &gt; &epsilon;)</b> (almost sure: it tends to 0 exactly when X<sub>n</sub> &rarr; 0 a.s.), and <b>E X<sub>n</sub>&sup2;</b> (L&sup2;). The sup is computed over k &le; N, so for sequences that do not converge a.s. the orange curve has to fall near n = N: this is a truncation effect, not convergence.</p>
+  <div class="params">
+    <div class="wide"><label for="gk">Sequence</label><select id="gk" onchange="galSel()"></select></div>
+    <div><label for="gM">Paths M</label><input type="number" id="gM" value="3000" min="200" max="20000" step="200"></div>
+    <div><label for="gN">Length N</label><input type="number" id="gN" value="1000" min="50" max="5000" step="50"></div>
+    <div><label for="gE">&epsilon;</label><input type="number" id="gE" value="0.5" min="0.001" step="0.05"></div>
+    <div><label for="gS">Seed</label><input type="number" id="gS" value="2327983"></div>
+  </div>
+  <button onclick="runGal()">Run</button>
+  <div class="box" id="gDesc"></div>
+  <div class="figs2"><figure><svg id="svgGP"></svg><figcaption>First four paths X<sub>n</sub>(&omega;) for n &le; 120.</figcaption></figure><figure><svg id="svgGC"></svg><figcaption>The three quantities against n (log&ndash;log; zeros are not drawn).</figcaption></figure></div>
+  <div class="tblwrap"><table class="res" id="gTab"></table></div>
+</section>
+
+<section class="card" id="lln">
+  <h2><span class="num">3</span><span>The Law of Large Numbers</span></h2>
+  <p>X<sub>1</sub>, X<sub>2</sub>, &hellip; i.i.d. with mean &mu;; sample mean X&#772;<sub>n</sub> = (X<sub>1</sub> + &hellip; + X<sub>n</sub>)/n.</p>
+  <div class="tblwrap"><table class="res">
+    <tr><th>Version</th><th>Statement</th><th>Mode</th><th>Role</th></tr>
+    <tr><td>Mean-square LLN</td><td>if &sigma;&sup2; = Var X &lt; &infin;: E(X&#772;<sub>n</sub> &minus; &mu;)&sup2; = &sigma;&sup2;/n &rarr; 0</td><td>L&sup2;</td><td>Exact rate of the MSE; direct from the additivity of the variance (Section 5).</td></tr>
+    <tr><td>Weak LLN (Chebyshev, Khinchin)</td><td>E|X| &lt; &infin; &rArr; X&#772;<sub>n</sub> &rarr;<sup>P</sup> &mu;. With a variance: P(|X&#772;<sub>n</sub> &minus; &mu;| &gt; &epsilon;) &le; &sigma;&sup2;/(n&epsilon;&sup2;)</td><td>in probability</td><td><b>Consistency</b> of the sample mean; the form needed for estimators.</td></tr>
+    <tr><td>Strong LLN (Kolmogorov)</td><td>E|X| &lt; &infin; &hArr; X&#772;<sub>n</sub> &rarr;<sup>a.s.</sup> &mu;</td><td>almost sure</td><td>Statement about a <i>single</i> infinite run: Monte Carlo and relative frequencies converge along the sequence you actually observe.</td></tr>
+  </table></div>
+  <div class="params">
+    <div class="wide"><label for="lp">Population</label><select id="lp" onchange="runLln()"></select></div>
+    <div><label for="lE">&epsilon;</label><input type="number" id="lE" value="0.1" min="0.001" step="0.01" onchange="runLln()"></div>
+    <div><label for="lM">Paths M</label><input type="number" id="lM" value="1500" min="100" max="10000" step="100" onchange="runLln()"></div>
+    <div><label for="lN">N</label><input type="number" id="lN" value="5000" min="100" max="20000" step="100" onchange="runLln()"></div>
+  </div>
+  <div class="figs2"><figure><svg id="svgL1"></svg><figcaption>Eight running means X&#772;<sub>n</sub> (each line is one &omega;). Almost sure convergence says that each line eventually stays near &mu;.</figcaption></figure><figure><svg id="svgL2"></svg><figcaption>P(|X&#772;<sub>n</sub> &minus; &mu;| &gt; &epsilon;) against Chebyshev&rsquo;s bound &sigma;&sup2;/(n&epsilon;&sup2;).</figcaption></figure></div>
+  <div class="figs2"><figure><svg id="svgL3"></svg><figcaption>Mean squared error E(X&#772;<sub>n</sub> &minus; &mu;)&sup2; against &sigma;&sup2;/n (L&sup2; convergence).</figcaption></figure><div class="findings" id="llnFinds" style="margin-top:0"></div></div>
+</section>
+
+<section class="card" id="clt">
+  <h2><span class="num">4</span><span>The Central Limit Theorem</span></h2>
+  <div class="result"><span class="eq">Z<sub>n</sub> = &radic;n (X&#772;<sub>n</sub> &minus; &mu;)/&sigma; = (S<sub>n</sub> &minus; n&mu;)/(&sigma;&radic;n) &nbsp;&rarr;<sup>d</sup>&nbsp; N(0, 1)</span><span class="sub">X<sub>i</sub> i.i.d., 0 &lt; &sigma;&sup2; &lt; &infin; (Lindeberg&ndash;L&eacute;vy). Equivalently P(Z<sub>n</sub> &le; z) &rarr; &Phi;(z) for every z.</span></div>
+  <ul class="plain">
+    <li><b>The mode is convergence in distribution, and nothing stronger is possible.</b> Z<sub>n</sub> does not converge in probability (or a.s., or in L&sup2;) to anything: Z<sub>n</sub> and Z<sub>2n</sub> share half of their terms, correlation 1/&radic;2, so Z<sub>2n</sub> &minus; Z<sub>n</sub> has variance 2 &minus; &radic;2 for all large n and does not shrink (table below). Only the <i>law</i> of Z<sub>n</sub> settles down.</li>
+    <li><b>The LLN says where X&#772;<sub>n</sub> goes; the CLT says how it fluctuates around it:</b> X&#772;<sub>n</sub> &asymp; &mu; + &sigma;Z/&radic;n. The LLN is the first-order result (a constant, via P / a.s.), the CLT the second-order result (a random fluctuation, via d).</li>
+    <li><b>Berry&ndash;Esseen</b> quantifies the speed: sup<sub>z</sub> |P(Z<sub>n</sub> &le; z) &minus; &Phi;(z)| &le; C &rho;/(&sigma;&sup3;&radic;n) with &rho; = E|X &minus; &mu;|&sup3; and C &le; 0.4748: the error is O(1/&radic;n), and larger for skewed laws.</li>
+    <li><b>Slutsky</b> (d combined with P) lets us replace &sigma; by the sample standard deviation s<sub>n</sub> &rarr;<sup>P</sup> &sigma;: &radic;n(X&#772;<sub>n</sub> &minus; &mu;)/s<sub>n</sub> &rarr;<sup>d</sup> N(0, 1), which is the basis of confidence intervals and z / t tests.</li>
+  </ul>
+  <div class="params">
+    <div class="wide"><label for="cp">Population</label><select id="cp" onchange="runClt()"></select></div>
+    <div><label for="cn">n shown in the histogram</label><select id="cn" onchange="drawCltHist()"></select></div>
+    <div><label for="cM">Replications M</label><input type="number" id="cM" value="4000" min="500" max="20000" step="500" onchange="runClt()"></div>
+  </div>
+  <div class="figs2"><figure><svg id="svgC1"></svg><figcaption>Histogram of M simulated values of Z<sub>n</sub> against the N(0, 1) density.</figcaption></figure><figure><svg id="svgC2"></svg><figcaption>Kolmogorov distance sup |F<sub>n</sub> &minus; &Phi;| against n, with the Berry&ndash;Esseen bound (dashed) and a 1/&radic;n reference.</figcaption></figure></div>
+  <h3>Z<sub>n</sub> does not converge in probability</h3>
+  <div class="tblwrap"><table class="res" id="cTab"></table></div>
+</section>
+
+<section class="card" id="sqrt">
+  <h2><span class="num">5</span><span>Why &radic;n? Additivity of the variance and the role of independence</span></h2>
+  <h3>5.1 The calculation</h3>
+  <div class="deriv">
+    <span class="eq">Var(S<sub>n</sub>) = &sum;<sub>i</sub> Var(X<sub>i</sub>) + 2 &sum;<sub>i&lt;j</sub> Cov(X<sub>i</sub>, X<sub>j</sub>)</span><span class="why">always true (bilinearity of the covariance)</span>
+    <span class="eq">independent (or just uncorrelated): Cov(X<sub>i</sub>, X<sub>j</sub>) = 0 &rArr; Var(S<sub>n</sub>) = n&sigma;&sup2;</span><span class="why">the variance is <b>additive</b>; the standard deviation grows like &radic;n, not like n</span>
+    <span class="eq">sd(S<sub>n</sub>) = &sigma;&radic;n, &nbsp; sd(X&#772;<sub>n</sub>) = &sigma;/&radic;n</span><span class="why">fluctuations of the sum are of order &radic;n, those of the mean of order 1/&radic;n</span>
+  </div>
+  <p>The fluctuations of independent terms partly cancel (some are positive, some negative): n terms of size &sigma; add up to &sigma;&radic;n, not to n&sigma;. To see a non-degenerate limit one has to rescale by exactly this factor: n<sup>a</sup>(X&#772;<sub>n</sub> &minus; &mu;) has standard deviation &sigma; n<sup>a&minus;1/2</sup>, which tends to 0 if a &lt; 1/2 (this is the LLN: degenerate limit), to &infin; if a &gt; 1/2, and stays at &sigma; only for <b>a = 1/2</b> (the CLT).</p>
+  <div class="params"><div><label for="sM">Paths M</label><input type="number" id="sM" value="1500" min="100" max="10000" step="100" onchange="runSqrt()"></div></div>
+  <div class="figs2"><figure><svg id="svgS1"></svg><figcaption>Simulated sd of n<sup>a</sup>(X&#772;<sub>n</sub> &minus; &mu;) for Exponential(1) data (&sigma; = 1), markers; theory &sigma; n<sup>a&minus;1/2</sup>, dashed. Only a = 1/2 is flat.</figcaption></figure>
+  <div>
+  <h3 style="margin-top:0">5.2 Without independence</h3>
+  <p>The &radic;n scaling relies on the correlations adding up to <i>o(n)</i>. Below, n&middot;Var(X&#772;<sub>n</sub>)/&sigma;&sup2; for unit-variance Gaussian sequences (it is 1 for independent data):</p>
+  <div class="params"><div><label for="dR">Equicorrelated &rho;</label><input type="number" id="dR" value="0.2" min="0" max="0.95" step="0.05" onchange="runSqrt()"></div><div><label for="dP">AR(1) coefficient &phi;</label><input type="number" id="dP" value="0.6" min="0" max="0.95" step="0.05" onchange="runSqrt()"></div></div>
+  </div></div>
+  <div class="figs2"><figure><svg id="svgS2"></svg><figcaption>n &middot; Var(X&#772;<sub>n</sub>)/&sigma;&sup2; against n; markers: simulation, dashed: exact formulas.</figcaption></figure>
+  <div class="box"><b>Three regimes.</b><ul class="plain" style="margin:6px 0 0">
+    <li><b>Independent:</b> ratio = 1 for every n. Variance of the mean &sigma;&sup2;/n.</li>
+    <li><b>Short memory (AR(1), correlations decay geometrically):</b> the ratio converges to the <i>long-run variance</i> (1+&phi;)/(1&minus;&phi;). The &radic;n scaling and the CLT survive, with a larger constant: the effective sample size is n(1&minus;&phi;)/(1+&phi;).</li>
+    <li><b>Long memory / common factor (equicorrelated &rho; &gt; 0):</b> Var(X&#772;<sub>n</sub>) = &sigma;&sup2;[1/n + (1 &minus; 1/n)&rho;] &rarr; &rho;&sigma;&sup2; &gt; 0. The mean does not even converge to &mu; (it converges to a random variable): the LLN, and with it the &radic;n scaling, fails.</li></ul></div></div>
+  <h3>5.3 In statistical inference</h3>
+  <ul class="plain">
+    <li><b>Standard error.</b> SE(X&#772;) = &sigma;/&radic;n, estimated by s/&radic;n: <b>to halve the error you need four times as much data</b>. The sample size for a margin of error e at confidence 95% is n = (1.96 &sigma; / e)&sup2;.</li>
+    <li><b>&radic;n-consistency and asymptotic normality.</b> Most estimators &theta;&#770;<sub>n</sub> satisfy &radic;n(&theta;&#770;<sub>n</sub> &minus; &theta;) &rarr;<sup>d</sup> N(0, V): for the maximum-likelihood estimator V = 1/I(&theta;) (inverse Fisher information); by the delta method, &radic;n(g(&theta;&#770;<sub>n</sub>) &minus; g(&theta;)) &rarr;<sup>d</sup> N(0, g&prime;(&theta;)&sup2; V). The requirement of independence (or weak dependence) is built into the proofs.</li>
+    <li><b>Test statistics</b> such as &radic;n(X&#772; &minus; &mu;<sub>0</sub>)/s are of order 1 under H<sub>0</sub> and of order &radic;n under an alternative: this is why power grows with n.</li>
+  </ul>
+  <div class="params">
+    <div class="wide"><label for="vp">Population for the coverage experiment</label><select id="vp" onchange="runCover()"></select></div>
+    <div><label for="vM">Replications</label><input type="number" id="vM" value="3000" min="500" max="20000" step="500" onchange="runCover()"></div>
+  </div>
+  <p>Coverage of the interval X&#772; &plusmn; 1.96 s/&radic;n (nominal 95%) &mdash; the CLT guarantees it only as n &rarr; &infin;:</p>
+  <div class="tblwrap"><table class="res" id="vTab"></table></div>
+</section>
+
+<section class="card" id="summary">
+  <h2><span class="num">6</span><span>Summary: which mode where</span></h2>
+  <div class="tblwrap"><table class="res">
+    <tr><th>Result</th><th>Mode</th><th>Hypotheses</th><th>Used for</th></tr>
+    <tr><td>Chebyshev / mean-square LLN</td><td>L&sup2; (and P)</td><td>finite variance; uncorrelated terms suffice</td><td>MSE, rates, sample-size formulas</td></tr>
+    <tr><td>Weak LLN</td><td>in probability</td><td>i.i.d., E|X| &lt; &infin;</td><td>consistency of estimators</td></tr>
+    <tr><td>Strong LLN</td><td>almost sure</td><td>i.i.d., E|X| &lt; &infin;</td><td>Monte Carlo, relative frequencies along a single run, ergodic averages</td></tr>
+    <tr><td>Glivenko&ndash;Cantelli</td><td>a.s. (uniformly in x)</td><td>i.i.d.</td><td>the empirical cdf converges to F; bootstrap, Kolmogorov&ndash;Smirnov test</td></tr>
+    <tr><td>Central Limit Theorem</td><td>in distribution</td><td>i.i.d., 0 &lt; &sigma;&sup2; &lt; &infin; (Lindeberg: independent, no dominant term)</td><td>confidence intervals, z / t tests, approximations of binomial / Poisson</td></tr>
+    <tr><td>Slutsky, continuous mapping, delta method</td><td>combine P and d</td><td>X<sub>n</sub> &rarr;<sup>d</sup> X, Y<sub>n</sub> &rarr;<sup>P</sup> c &rArr; X<sub>n</sub>Y<sub>n</sub> &rarr;<sup>d</sup> cX</td><td>studentised statistics, variance-stabilising transformations</td></tr>
+    <tr><td>Asymptotics of the MLE</td><td>P (consistency) and d (normality)</td><td>regularity conditions</td><td>standard errors, Wald / likelihood-ratio tests</td></tr>
+    <tr><td>Law of the iterated logarithm</td><td>almost sure</td><td>i.i.d., finite variance</td><td>exact size of the a.s. fluctuations: &sigma;&radic;(2 n log log n)</td></tr>
+  </table></div>
+  <div class="callout"><b>In one sentence.</b> a.s. and P describe <i>that</i> the sample mean converges to &mu; (a.s. along every path, P at a fixed n); L&sup2; says <i>how fast the error shrinks on average</i> (&sigma;/&radic;n); convergence in distribution says <i>what the remaining error looks like</i> (Gaussian of size &sigma;/&radic;n), and the &radic;n comes from the additivity of the variance of independent terms.</div>
+</section>
+</div>
+<script src="js/charts.js"></script>
+<script src="js/prob.js"></script>
+<script src="js/ex1.js"></script>
+<script>
+(function(){const a=document.querySelector("a.dl");if(!a)return;a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="Homework7.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("Homework7.zip was not found next to the pages. Upload the zip to the same folder of the repository to enable this button.");}});})();
+</script>
+</body>
+</html>
