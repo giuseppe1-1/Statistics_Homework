@@ -31,7 +31,7 @@
 </div>
 </div>
 <script>
-(function(){const a=document.querySelector("a.dl");a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="integration-site.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("integration-site.zip was not found next to index.html. Upload the zip to the same folder of the repository to enable this button.");}});})();
+(function(){const a=document.querySelector("a.dl");a.addEventListener("click",async ev=>{if(!/^https?:$/.test(location.protocol))return;ev.preventDefault();try{const r=await fetch(a.href,{method:"HEAD"});if(!r.ok)throw 0;const t=document.createElement("a");t.href=a.href;t.download="Homework5.zip";document.body.appendChild(t);t.click();t.remove();}catch(e){alert("Homework5.zip was not found next to index.html. Upload the zip to the same folder of the repository to enable this button.");}});})();
 </script>
 </body>
 </html>
